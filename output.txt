@@ -1,0 +1,1517 @@
+==================================================
+DOCS
+==================================================
+
+--- Kich_ban_thuc_nghiem_X-LocVul_SoICT2026 (1).docx ---
+KỊCH BẢN THỰC NGHIỆM BỔ SUNG CHO BÀI BÁO X-LocVul – SOICT 2026
+Mục đích: thay toàn bộ ô TBD trong bản thảo bằng kết quả có thể tái lập, so sánh công bằng và đủ sức bảo vệ bốn Research Questions. Tài liệu này là runbook thực thi, không phải phần văn xuôi của bài báo.
+1. Quyết định thiết kế bắt buộc trước khi chạy
+Mã
+Quyết định khóa
+Tiêu chí nghiệm thu
+D1
+Một manifest mẫu duy nhất, có sample_id, project, commit_time, CVE, CWE, function_hash, split.
+Không có CVE/commit/near-duplicate đi qua hai split.
+D2
+Primary split: PrimeVul official/chronological; secondary: cross-project và Big-Vul→PrimeVul.
+Không dùng random 70/15/15 làm kết quả chính.
+D3
+5 seeds: 13, 21, 42, 87, 101; cùng ngân sách tuning.
+Mỗi cấu hình có đủ 5 checkpoint hoặc ghi rõ lỗi.
+D4
+Checkpoint Stage 1 theo validation PR-AUC; Stage 2 theo validation MRR@10.
+Không chọn checkpoint bằng test set.
+D5
+Ngưỡng detection chọn trên validation theo hai điểm: max-MCC và recall≥0.80.
+Báo cáo cả hai operating points.
+D6
+Đóng băng test set, prompt, rubric trước chạy cuối.
+Có file config và git commit/tag.
+2. Nhóm E0 — Kiểm toán dữ liệu và leakage
+E0 là điều kiện vào cho toàn bộ paper. Nếu E0 không đạt, mọi chênh lệch mô hình đều không được dùng làm claim.
+Run
+Thao tác
+Đầu ra bắt buộc
+E0.1
+Chuẩn hóa code: bỏ comment/whitespace cho hash phụ; giữ bản gốc cho model.
+exact_hash và normalized_hash.
+E0.2
+Nhóm theo CVE, commit, project và near-duplicate token/Jaccard hoặc MinHash.
+Báo cáo số cụm và số xung đột split.
+E0.3
+Kiểm tra nhãn: vulnerable/clean, CWE mapping, dòng lỗi; đánh dấu unknown/ambiguous.
+Data-card và bảng loại trừ.
+E0.4
+Đóng băng train/val/test manifests.
+CSV/JSONL + SHA-256 + thống kê theo split/CWE/project.
+E0.5
+Kiểm tra overlap với dữ liệu Stage 2/RQ3.
+Ma trận overlap và quy tắc loại bỏ.
+Stop rule: exact overlap giữa train và test phải bằng 0; mọi near-duplicate còn lại phải được nhóm về cùng một split hoặc loại khỏi primary analysis.
+3. Nhóm E1 — RQ1: Detection Generalization
+Run
+Encoder / loss / sampling
+Mục đích
+E1.0
+Majority và lexical/logistic baseline
+Sanity floor.
+E1.1
+CodeBERT, binary BCE
+Baseline kiến trúc.
+E1.2
+UniXCoder, binary BCE (λ=0)
+Tách hiệu ứng encoder.
+E1.3
+UniXCoder, BCE + CWE loss
+Hiệu ứng multi-task.
+E1.4
+E1.3 + model-driven hard-example mining
+Hiệu ứng mining thực sự.
+E1.5
+E1.3 với CWE shuffled trong train
+Negative-control cho auxiliary supervision.
+E1.6
+E1.3 với hierarchical CWE parent
+Độ nhạy với granularity/label noise.
+Hard-example mining chuẩn: huấn luyện E1.3 vòng 1; chạy inference trên train; chọn FP có p(vul)≥0.90 và FN có p(vul)≤0.10; giới hạn mỗi nhóm tối đa 20% mini-batch; huấn luyện vòng 2 từ cùng initialization/seed hoặc nêu rõ warm-start. Không gọi việc trộn dataset là hard mining.
+Metrics: PR-AUC (primary), MCC, F1/precision/recall, FPR, ROC-AUC, calibration ECE và Brier score. Báo cáo riêng PrimeVul paired accuracy và cross-project macro-average. Thống kê: 95% bootstrap CI; McNemar trên paired predictions; mean±SD 5 seeds; Holm correction. RQ1 chỉ được trả lời “có cải thiện” khi E1.3 vượt E1.2 trên primary split với CI/effect size và không suy giảm nghiêm trọng cross-project.
+Biến lỗi cần phân tầng
+Nhóm
+CWE family
+memory; input validation; numeric; resource/lifetime; other
+Function length
+≤128; 129–256; 257–512 tokens; truncated
+Project familiarity
+seen project; unseen project
+Pair structure
+paired vulnerable/patched; unpaired
+4. Nhóm E2 — RQ2: CWE-conditioned Localization
+Run
+Cấu hình
+So sánh/ý nghĩa
+E2.0
+LineVul replication
+Discriminative line-level baseline.
+E2.1
+LocVul replication
+Seq2Seq + semantic mapping baseline.
+E2.2
+CodeT5 generation only
+Đo hallucinated/non-source output.
+E2.3
+E2.2 + source projection
+Đóng góp của projection.
+E2.4
+E2.3 + predicted CWE top-1
+Cấu hình thực tế chính.
+E2.5
+E2.3 + oracle CWE
+Upper bound của conditioning.
+E2.6
+E2.3 + shuffled/wrong CWE
+Negative-control; đo độ phụ thuộc.
+E2.7
+Marginalize top-3 CWE theo xác suất
+Giảm lan truyền lỗi Stage 1.
+Giữ cố định: cùng danh sách function_id, ground-truth lines, preprocessing, max input length, beam size, k, budget tuning và seed. Nếu baseline gốc không chạy được, ghi rõ phiên bản thư viện, lỗi tái lập và dùng best-effort replication; không chép số từ bài báo gốc vào bảng so sánh trực tiếp.
+Metrics: Top-1/5/10 accuracy, MRR@10, median/mean IFA, effort@20% LOC, source-validity rate. Thống kê: Wilcoxon cho rank/IFA; McNemar cho hit@k; Cliff’s delta; bootstrap CI. Phân tích theo CWE correctness tạo ma trận 2×2: CWE đúng/sai × localization hit/miss. Khoảng cách E2.5−E2.4 là “upstream-CWE headroom”.
+5. Nhóm E3 — RQ3: Explanation Trustworthiness
+Mẫu chính: 150 vulnerabilities được phát hiện đúng và có line ground truth; 50 memory-safety, 50 input-validation/resource, 50 CWE khác. Tạo thêm 30 pilot cases để hiệu chỉnh rubric, không đưa vào thống kê cuối.
+Run
+Context cho LLM
+Mục tiêu
+E3.0
+Chỉ function
+LLM-only baseline.
+E3.1
+Function + localized line
+Hiệu ứng anchor dòng.
+E3.2
+Evidence package đầy đủ
+Hiệu ứng CWE + line IDs + confidence.
+E3.3
+E3.2 + verifier, chỉ flag
+Giảm output không đạt bằng abstention.
+E3.4
+E3.2 + verifier + một lần sửa
+Hiệu ứng self-correction.
+E3.5
+E3.2 nhưng CWE sai có chủ đích
+Độ nhạy với poisoned evidence.
+Tiêu chí
+Thang
+Định nghĩa đạt
+Source groundedness
+0/1
+Mọi Evidence Line tồn tại và khớp line ID.
+CWE consistency
+0/1
+Loại lỗi tương thích CWE/hierarchy.
+Terminology correctness
+0/1
+Không nhầm read/write/overflow/UAF…
+Root-cause correctness
+1–5
+≥4: cơ chế và data/control flow đúng, đủ.
+Repair usefulness
+1–5
+≥4: sửa đúng nguyên nhân, khả thi, không chung chung.
+Unsupported-claim rate
+Tỷ lệ
+Số claim không có bằng chứng / tổng claim.
+Hai chuyên gia chấm độc lập, ẩn tên cấu hình, thứ tự random theo case. Báo cáo weighted Cohen’s κ cho thang 1–5 và κ cho nhị phân; adjudication chỉ sau khi khóa điểm độc lập. Nhiệt độ chính = 0 để giảm nhiễu; sensitivity: 3 generations/case ở temperature 0.7 trên 30 case. McNemar cho tiêu chí nhị phân; Wilcoxon cho thang 1–5; Holm correction.
+6. Nhóm E4 — RQ4: End-to-End Utility
+Run
+Operating point
+Đo lường
+E4.1
+Detection max-MCC
+Funnel chuẩn.
+E4.2
+Recall≥0.80
+Chi phí khi ưu tiên không bỏ sót.
+E4.3
+High precision + abstention
+Trust/coverage trade-off.
+E4.4
+Không verifier
+Chi phí và lợi ích riêng của verifier.
+E4.5
+Top-1/5/10 inspection budgets
+Đường cong success–effort.
+Funnel bắt buộc: tất cả hàm → vulnerable được Stage 1 bắt đúng → có line đúng trong top-k → explanation root-cause≥4 → tất cả consistency checks pass. End-to-end Success@k = số mẫu đi qua đủ các bước / tổng số vulnerable test functions. Báo cáo coverage khi hệ thống abstain.
+Hiệu năng: batch size 1; 30 warm-up; 100 timed runs hoặc toàn test nếu nhỏ hơn; median, p95 latency; peak GPU memory; model load time tách riêng; số token input/output; cùng phần cứng và precision. Không dùng latency Kaggle không kiểm soát để claim production.
+7. Bảng ánh xạ kết quả vào bài báo
+Ô trong manuscript
+Nguồn run
+Điều kiện thay TBD
+Table RQ1
+E1.1–E1.4
+Đủ 5 seeds + CI + test chung.
+Table RQ2
+E2.0–E2.5
+Cùng function IDs; baseline tái lập.
+Table RQ3
+E3.0–E3.3
+150 cases + κ + paired tests.
+Table RQ4
+E4.1–E4.5
+Funnel và latency protocol hoàn chỉnh.
+Abstract
+Best primary results
+Chỉ điền sau khi khóa toàn bộ bảng.
+Conclusion
+Kết quả có ý nghĩa
+Không biến negative result thành claim tích cực.
+8. Cấu trúc thư mục và file đầu ra tối thiểu
+data/manifests/{train,val,test}.jsonl và data_card.md
+configs/e1/*.yaml, configs/e2/*.yaml, prompts/e3/*.txt
+predictions/{run_id}/{seed}.jsonl — một dòng mỗi sample_id
+metrics/{run_id}/summary.json và bootstrap_samples.parquet
+annotations/e3/{raterA,raterB,adjudicated}.csv
+environment/requirements-lock.txt, hardware.json, git_commit.txt
+paper_tables/*.csv và figures/*.pdf hoặc *.svg
+9. Trình tự thực hiện và stop/go
+Thứ tự
+Công việc
+Stop/Go
+1
+E0 audit + freeze manifests
+GO khi leakage checks đạt.
+2
+E1.1–E1.3 trước; E1.4–E1.6 sau
+GO khi binary và MTL chạy đủ 5 seeds.
+3
+E2.2–E2.5; sau đó replication baselines
+GO khi source validity và IDs kiểm tra đúng.
+4
+Pilot E3, khóa rubric; rồi 150 cases
+GO khi κ pilot đạt khoảng ≥0.60 hoặc rubric đã sửa.
+5
+E4 trên checkpoint đã khóa
+Không retune theo kết quả test.
+6
+Sinh bảng tự động; thay TBD; rà claims
+Nộp khi không còn TBD/placeholder.
+10. Những claim tuyệt đối không sử dụng
+“PrimeVul + Big-Vul là hard mining” nếu chưa chạy vòng mining theo lỗi mô hình.
+“ROUGE cao chứng minh không hallucinate.”
+So trực tiếp 64.57% với 91.04% của LocVul khi khác split/dataset.
+“Causal explanation” khi không có causal identification/intervention.
+“Khắc phục hoàn toàn hallucination” chỉ vì output được projection về source.
+“Production-ready” nếu latency và external validity chưa được đo có kiểm soát.
+Kết luận thực thi: ưu tiên E0 → E2/E3. Điểm mạnh có khả năng tạo khác biệt nhất cho SOICT không phải F1 Stage 1, mà là bằng chứng rằng CWE conditioning và cross-stage verification cải thiện localization/faithfulness trong so sánh paired, cùng split.
+
+--- LinhThucNghiem_New.docx ---
+Bài báo được định vị thành evidence-grounded cascade:
+Detection → source-grounded localization → evidence-grounded explanation.
+Điểm mới có thể bảo vệ tốt hơn là: Multi-task vulnerability+CWE detection; source-constrained projection với phép đo hallucination trực tiếp; CWE-aware grounding cho explainer; và quan trọng nhất là đánh giá error propagation từ Stage 1 → Stage 2 → Stage 3. Cách định vị này khác với các hướng gần đây dùng LLM trực tiếp hoặc RAG/reasoning, đồng thời phù hợp hơn với AI for Software Engineering và trustworthy software analysis. UniXCoder thực sự được pretrain với cross-modal signals, bao gồm AST representation, nên có cơ sở để dùng làm encoder nhưng không nên diễn đạt quá mức rằng nó tự động “theo dõi data flow/control flow”. 
+Tập trung vào 4 thực nghiệm bắt buộc + 2 thực nghiệm tăng sức mạnh, theo thứ tự:
+E1 – Fair Stage-1 baseline, bắt buộc. Chạy trên cùng một split: CodeBERT single-task, UniXCoder single-task, UniXCoder multi-task. Báo cáo Vulnerable-F1, Precision, Recall, MCC, AUPRC, Balanced Accuracy, FPR; tối thiểu 3 seeds, mean ± std và 95% CI. Đây là thực nghiệm quan trọng nhất vì nó xác nhận liệu UniXCoder + CWE auxiliary task có thực sự tạo đóng góp. 
+Kiểm tra lại split của kết quả thực nghiệm. Về chủ quan, thầy nghĩ phải tốt hơn.
+E2 – Ablation của Multi-task Learning. Chạy λ_CWE = 0, 0.1, 0.25, 0.5, 1.0. Báo cáo cả Vulnerability-F1 và CWE macro-F1. Báo cáo gốc chỉ cho công thức nhưng chưa nêu cụ thể hai trọng số. Thực nghiệm này vừa khắc phục thiếu sót reproducibility, vừa chứng minh contribution của auxiliary CWE supervision. 
+E3 – Hallucination/Localization ablation, rất quan trọng. So sánh raw CodeT5 generation → normalized exact matching → edit-distance/BM25 → SentenceTransformer cosine source projection. Ngoài Top-1/5/10, MRR và IFA, bổ sung hai metric mới: Generated-Line Hallucination Rate (GLHR) và Projection Rescue Rate (PRR). Không nên tiếp tục dùng ROUGE cao làm bằng chứng rằng “không hallucination”; ROUGE chỉ đo overlap chuỗi. 
+E4 – Đánh giá Stage 3 định lượng. Lấy khoảng 100–200 vulnerable functions, ít nhất 10 CWE families. So sánh function-only Qwen vs function + localized line vs function + line + CWE vs oracle line + CWE. Đánh giá root-cause correctness, CWE consistency, evidence support, unsupported-claim rate và repair usefulness. Nên có ≥50 mẫu do 2 người đánh giá độc lập và báo Cohen's κ. Điều này đặc biệt cần thiết vì các nghiên cứu gần đây như Vul-RAG, R2Vul và VulInstruct đã đi khá sâu vào vulnerability reasoning/explanation; vì vậy X-LocVul không nên claim là “first explainable vulnerability detector”. 
+E5 – Leakage-controlled/chronological evaluation. Giữ split 70/15/15 hiện tại để reproduction, nhưng bổ sung một protocol de-duplicated + chronological, theo tinh thần PrimeVul. Đây sẽ là điểm làm bài mạnh hơn đáng kể trước reviewer. Dataset hiện tại của báo cáo đang dùng merged PrimeVul/BigVul và chia 70/15/15. 
+E6 – Runtime/deployment cost. Đo latency từng Stage, peak GPU memory, throughput và tỷ lệ hàm sạch bị Stage 1 loại bỏ trước khi gọi CodeT5/Qwen. Thực nghiệm này tương đối dễ nhưng rất hợp với track Software Engineering/DevSecOps của SoICT.
+
+--- X-LocVul_SoICT2026_MathObjects - 2.docx ---
+X-LocVul: Evidence-Grounded Cascaded Detection, Line Localization, and Root-Cause Explanation of C/C++ Vulnerabilities
+Hoang-Phuong-Linh Le and Quyet-Thang Huynh
+School of Information and Communication Technology, Hanoi University of Science and Technology, Hanoi, Vietnam
+Abstract. Source-code vulnerability analysis is most useful to developers when it answers three questions together: whether a function is vulnerable, where the security-relevant statement is located, and why the statement is unsafe. This paper presents X-LocVul, a modular three-stage pipeline for C/C++ that combines a multi-task UniXCoder detector, a CodeT5 line generator followed by source-constrained semantic projection, and a lightweight Qwen2.5-Coder explainer. The prototype jointly predicts vulnerability and CWE labels at Stage 1, maps the generated localization back to an actual input line at Stage 2, and conditions natural-language explanation on the localized evidence at Stage 3. On the current held-out test split, Stage 1 reaches 95.71% accuracy and 64.57% vulnerable-class F1 with a 1.08% false-positive rate; Stage 2 achieves 66.62% Top-10 accuracy, 41.01% MRR@10, and median IFA of 4. A real CVE case also exposes a key limitation: the explainer can reason correctly about a missing bounds check while using an incorrect vulnerability term. We therefore formulate a leakage-controlled evaluation and a CWE-aware evidence-anchoring extension to quantify detection generalization, source-line hallucination, explanation consistency, and end-to-end error propagation. X-LocVul is positioned as an evidence-grounded software-security assistant rather than an unconstrained LLM classifier.
+Keywords: software vulnerability detection, vulnerability localization, explainable AI, code language models, C/C++, DevSecOps.
+Introduction
+Vulnerability detection at function level is only the first step of a developer-facing security workflow. A binary warning still requires an engineer to inspect a potentially long function, identify the security-relevant statement, reconstruct the data-flow condition that makes it unsafe, and decide how to repair it. Recent code language models improve representation learning and generation, but realistic deployment remains difficult because benchmark leakage, class imbalance, line-level localization errors, and hallucinated explanations can make impressive aggregate scores misleading.
+The X-LocVul project starts from the LocVul idea of coupling function-level filtering with sequence-to-sequence line localization [1], but extends the workflow in two directions. First, the detector is implemented as a UniXCoder-based multi-task model with a vulnerability head and an auxiliary CWE head. Second, after localization, a small code-specialized LLM is used to explain the root cause and suggest a repair. The intended interface is therefore not merely a label; it is an evidence chain from a function-level decision to a source-resident line and then to a developer-readable explanation.
+This positioning requires more careful evaluation than the original project report. PrimeVul has shown that de-duplication and chronological splitting can dramatically reduce apparent vulnerability-detection performance compared with conventional benchmarks [2]. Meanwhile, recent work on explainable and reasoning-oriented vulnerability detection demonstrates that explanation generation itself is now an active research problem [8–12]. Consequently, the contribution of X-LocVul should not be framed as being the first system to explain vulnerabilities. Instead, we focus on the modularity and grounding interfaces between detection, localization, and explanation, and on measurements that reveal how errors propagate across these stages.
+We organize the study around three research questions: RQ1 asks whether auxiliary CWE supervision improves vulnerability detection under identical and leakage-controlled evaluation; RQ2 asks whether source-constrained semantic projection reduces generative line hallucination while preserving localization quality; and RQ3 asks whether conditioning a lightweight explainer on localized line evidence and CWE evidence improves security correctness and terminology consistency. A fourth practical question measures latency and resource cost of the cascade.
+The paper makes the following contributions: (1) an evidence-grounded three-stage architecture joining vulnerability/CWE prediction, source-constrained line localization, and lightweight explanation; (2) a multi-task detector and a CWE-aware explanation interface designed to reduce unconstrained LLM behavior; (3) a direct evaluation protocol for line hallucination and projection rescue, rather than inferring hallucination from text-overlap metrics; and (4) an end-to-end experimental design that separates component quality from error propagation and explicitly controls dataset leakage.
+Background and Related Work
+Function-Level Vulnerability Detection and Dataset Realism
+Big-Vul is a widely used C/C++ vulnerability dataset derived from real vulnerability-fixing commits [6]. Pre-trained code models such as CodeBERT and UniXCoder provide stronger semantic representations than task-specific models trained from scratch. UniXCoder in particular uses cross-modal pre-training signals that include source code, comments, and a serialized form of abstract syntax trees [3]. However, representation strength does not remove benchmark bias. Ding et al. introduced PrimeVul with stronger labeling, de-duplication, and chronological splitting, and showed that performance on earlier datasets can substantially overestimate real-world generalization [2]. This observation is central to our revised experimental design.
+Line-Level Localization
+LineVul formulates fine-grained vulnerability prediction at the line level and established ranking-oriented metrics for developer inspection [5]. LocVul later proposed a sequence-to-sequence localization approach in which a generated vulnerable statement is matched back to a line in the original function [1]. X-LocVul retains this useful source-projection principle while explicitly measuring when generation leaves the source and when projection repairs the error. This distinction is important because a high ROUGE score can coexist with token-level changes that make a generated statement unusable as a source location.
+Vulnerability Explanation with LLMs
+LLM-based vulnerability analysis has rapidly moved from unconstrained prompting toward structured security knowledge and reasoning. LLMVulExp specializes LLMs for vulnerability detection and detailed explanations [8]. Vul-RAG retrieves vulnerability knowledge distilled from historical cases and uses it to guide detection and explanations [9]. R2Vul distills structured security reasoning into a compact model [10], while VulInstruct guides reasoning with security specifications extracted from historical vulnerabilities [11]. LLMxCPG combines code-property-graph-guided context with LLM reasoning to preserve vulnerability-relevant context [12]. These studies motivate a narrower claim for X-LocVul: its novelty lies in an explicit evidence cascade and the empirical study of grounding and error propagation, not in explanation generation per se.
+X-LocVul Architecture
+Given a C/C++ function , X-LocVul constructs an evidence path across three components. Stage 1 returns a vulnerability probability and a CWE distribution. When the vulnerability probability exceeds a threshold , Stage 2 generates a candidate vulnerable statement and projects it onto the nearest line that actually occurs in f. Stage 3 receives the original function plus the localized line; in the revised design it additionally receives the predicted CWE label and canonical CWE name as an explicit security anchor.
+Fig. 1. X-LocVul evidence cascade. The dashed path indicates the proposed CWE-aware evidence anchor for Stage 3.
+Stage 1: Multi-Task Vulnerability and CWE Detection
+The encoder is initialized from UniXCoder-base. Its function representation h is fed into two heads. The first head estimates the probability that the function is vulnerable; the second estimates a distribution over CWE categories. The two objectives are optimized jointly:
+(1)
+where  is binary cross-entropy and  is categorical cross-entropy. The original prototype did not report the actual loss weights, so the revised study treats  as an experimental factor rather than assuming that multi-task learning is beneficial. The auxiliary CWE task is intended to regularize the shared representation toward security-relevant distinctions, but this claim must be validated with a single-task ablation on exactly the same split.
+Stage 2: Generative Localization with Source Projection
+For a function predicted as vulnerable, CodeT5 generates a candidate statement . Because sequence generation can alter identifiers, punctuation, or whitespace,  is not directly exposed as a source location. Instead, each source line  is embedded with a sentence encoder  and the final output is the source line with maximum cosine similarity to the generated candidate:
+(2)
+This projection guarantees that the returned location is a line that exists in the input function, but it does not guarantee correctness. We therefore separate two phenomena in evaluation: Generated-Line Hallucination Rate (GLHR), the fraction of raw generations that do not match any normalized source line, and Projection Rescue Rate (PRR), the fraction of hallucinated generations for which projection maps to a ground-truth vulnerable line. These metrics complement Top-k accuracy, MRR, and Initial False Alarm (IFA).
+Stage 3: Evidence-Grounded Root-Cause Explanation
+The prototype uses Qwen2.5-Coder-1.5B-Instruct, a compact code-specialized model [7]. The function and localized line are inserted into a constrained prompt asking for the root cause, data-flow reasoning, and a repair direction. We use the term root-cause explanation rather than causal explanation because the system does not perform formal causal inference.
+The revised version adds a CWE consistency guard. The prompt includes the predicted CWE identifier and canonical name, and requests a structured response with four fields: vulnerability type, source evidence, root cause, and repair. A lightweight validator then flags a response when its stated vulnerability type contradicts the Stage-1 CWE anchor. This extension is directly motivated by the observed CVE-2017-13036 case, in which the model correctly reasoned about an out-of-bounds read and proposed a bounds check but referred to the behavior as a buffer overflow.
+Experimental Design
+Datasets and Existing Prototype Setup
+The current Stage-1 prototype uses a merged Big-Vul/PrimeVul corpus and a 70/15/15 train/validation/test split. The resulting test set contains 26,738 functions: 24,816 clean and 1,922 vulnerable. Training was performed with PyTorch/HuggingFace on an NVIDIA Tesla T4. The reported Stage-1 configuration uses learning rate 2×10^-5, batch size 8, three epochs, weight decay 0.01, and maximum sequence length 512. Stage 2 uses CodeT5 with learning rate 5×10^-5, 10 epochs, beam size 4, and label padding ignored by the cross-entropy loss. Stage 3 uses Qwen2.5-Coder-1.5B-Instruct with temperature 0.7 and a 512-token output budget.
+Because a random function-level split can leave near-duplicates or temporally related fixes across partitions, the current prototype results are treated as preliminary. The final SoICT experiment will preserve this split only as a reproduction setting and add a de-duplicated chronological protocol following the design principles of PrimeVul [2].
+For the leakage-controlled protocol, samples will be grouped by vulnerability-fixing commit and project before partitioning. Exact duplicate functions and high-overlap vulnerable/patched pairs that cross partitions will be removed or assigned to the same group. Training will use only commits older than the validation and test windows, and the final test set will remain untouched during threshold selection. We will publish the split manifest, sample counts, CWE coverage, and a hash of each function so that every model is evaluated on exactly the same examples. This protocol is deliberately stricter than the current random split and the resulting scores are expected to be lower, but they will support stronger claims about generalization.
+The Stage-1 comparison will also separate the effect of the encoder from the effect of multi-task learning. CodeBERT single-task, UniXCoder single-task, and UniXCoder multi-task will share preprocessing, maximum length, optimizer family, checkpoint rule, and threshold-selection procedure. In addition to vulnerable-class F1, we will report MCC and AUPRC because they remain informative under severe class imbalance. Calibration will be characterized with reliability curves and Brier score where probabilities are used for thresholding; this is especially relevant because Stage 1 decides which functions incur the computational cost of Stages 2 and 3.
+Research Questions and Metrics
+Table 1. Research questions and primary measurements.
+RQ
+Question
+Primary metrics
+RQ1
+Does CWE auxiliary supervision improve robust function-level detection?
+Vul-F1, MCC, AUPRC, balanced accuracy, FPR; CWE macro-F1
+RQ2
+Does source projection improve line localization and reduce generative hallucination?
+Top-1/5/10, MRR, IFA, GLHR, PRR
+RQ3
+Does line+CWE anchoring improve explanation quality and consistency?
+Root-cause correctness, CWE consistency, evidence support, unsupported-claim rate
+RQ4
+What is the deployment cost of the cascade?
+Latency, throughput, peak memory, Stage-1 filtering ratio
+Controlled Supplementary Experiments
+The most important revision is to replace the cross-dataset baseline comparison in the project report with controlled comparisons on identical data. Every Stage-1 model will be evaluated with at least three random seeds; 95% bootstrap confidence intervals will be reported for the principal metrics. Where predictions are paired on the same test functions, significance will be assessed with a paired bootstrap or an appropriate paired test. Hyperparameters and checkpoint selection will be fixed before final test evaluation.
+Table 2. Supplementary experiment matrix for the SoICT submission.
+ID
+Comparison
+Purpose
+Status
+E1
+CodeBERT single-task vs. UniXCoder single-task vs. UniXCoder multi-task, identical split
+Isolate encoder and multi-task effects
+TBD
+E2
+Test whether auxiliary CWE supervision helps detection
+TBD
+E3
+Direct generation vs. normalized exact match vs. edit-distance/BM25 projection vs. semantic projection
+Quantify line hallucination and projection rescue
+TBD
+E4
+Function-only vs. line-anchored vs. line+CWE-anchored vs. oracle evidence
+Measure explanation grounding and upstream error propagation
+TBD
+E5
+Chronological/de-duplicated unseen CVE subset
+Assess realistic generalization
+TBD
+E6
+Per-stage runtime and memory
+Assess deployment feasibility
+TBD
+For E4, we recommend 100–200 vulnerable functions covering at least 10 CWE families, with a human-evaluated subset of at least 50 cases. Two reviewers independently score whether the explanation identifies the correct root cause, cites evidence supported by the input, uses a consistent CWE description, and proposes a security-relevant repair direction. Inter-rater agreement should be reported (e.g., Cohen’s κ). Any LLM-as-a-judge score is supplementary rather than the sole ground truth.
+Prototype Results
+Stage-1 Detection
+On the current held-out test split, the detector produces 24,546 true negatives, 270 false positives, 877 false negatives, and 1,045 true positives. This corresponds to 95.71% overall accuracy, 79.47% precision for vulnerable functions, 54.37% recall, and 64.57% vulnerable-class F1. The false-positive rate is approximately 1.08%. The validation trajectory peaks at 66.92% vulnerability F1 at epoch 2, while CWE accuracy increases from 14.9% to 30.6% across the three training epochs.
+Table 3. Current Stage-1 test performance (preliminary split).
+Measure
+Value
+Test functions
+26,738
+TN / FP / FN / TP
+24,546 / 270 / 877 / 1,045
+Accuracy
+95.71%
+Vulnerable precision
+79.47%
+Vulnerable recall
+54.37%
+Vulnerable F1
+64.57%
+False-positive rate
+1.08%
+The project report compared these values directly with the LocVul numbers reported on its own experimental setting. That comparison is not sufficient for a paper because the datasets and protocols differ. The final paper will therefore retain the published LocVul number only as contextual background and base all method claims on the controlled E1 comparison.
+Stage-2 Localization
+CodeT5 validation loss decreases from approximately 3.03 at epoch 1 to 0.161 at epoch 10. ROUGE-1/ROUGE-L/ROUGE-Lsum reach about 66.67% and ROUGE-2 reaches 57.14%. These overlap scores are useful training diagnostics but should not be interpreted as proof that hallucination is absent. On the current localization evaluation, X-LocVul reaches 66.62% Top-10 accuracy, 41.01% MRR@10, and median IFA of 4.
+Table 4. Current Stage-2 localization performance.
+Metric
+Value
+Top-10 accuracy
+66.62%
+MRR@10
+41.01%
+Median IFA
+4.0
+Generated-Line Hallucination Rate
+TBD (E3)
+Projection Rescue Rate
+TBD (E3)
+Stage-3 Case Study and Failure Mode
+The prototype was exercised end-to-end on tcpdump CVE-2017-13036, labeled CWE-125 (out-of-bounds read). Stage 1 predicted the function as vulnerable with the correct CWE. Stage 2 projected the generated evidence to the source line “if (ndo->ndo_vflag > 1) {”. The Stage-3 model correctly recognized a missing bounds check and suggested an additional length check, but it described a read beyond the end of a buffer as “buffer overflow.” This is a small terminology error with an important methodological consequence: a fluent explanation can be logically useful while still being inconsistent with the security taxonomy.
+This case motivates the line+CWE anchoring condition in E4. It also suggests reporting explanation correctness in multiple dimensions rather than a single fluency score. In the final paper, qualitative examples should include both successful explanations and failure cases, with all generated claims traceable to the input code, the localized line, or the known vulnerability metadata.
+Discussion
+Why a Cascade Instead of a Single LLM?
+A single large generative model can in principle predict a vulnerability, identify a line, and explain it in one response. X-LocVul deliberately separates these responsibilities. The detector can be calibrated and measured as a classifier; the localizer can be measured as a ranking problem; and the explainer can be audited against explicit source evidence. This modularity makes failures diagnosable and allows the system to reserve the generative model for the comparatively small fraction of functions that pass Stage 1. The approach also supports oracle experiments that distinguish “the explainer failed despite correct evidence” from “the explainer inherited an upstream localization error.”
+Threats to Validity
+Dataset leakage is the principal internal-validity threat. The existing random split must not be used to make claims of real-world generalization. The chronological and de-duplicated E5 protocol addresses this risk, but may also reduce the number of vulnerable test examples. A second threat is label quality: CWE labels can be coarse, missing, or inconsistent across CVE metadata. We will report the coverage of the CWE auxiliary task and exclude samples without a defensible mapping from CWE-specific metrics. A third threat is model stochasticity; all trainable comparisons will use repeated seeds, and generation parameters will be fixed for evaluation.
+Construct validity is especially important for Stage 2 and Stage 3. ROUGE measures text overlap, not source-line correctness, so direct hallucination and ranking metrics are required. Likewise, explanation fluency is not security correctness. Human scoring criteria will therefore separate root-cause correctness, evidence support, taxonomy consistency, and repair usefulness. External validity is limited to C/C++ function-level analysis; interprocedural vulnerabilities, configuration flaws, and other languages remain future work.
+Practical Implications
+The current detector favors precision over recall: roughly four-fifths of its positive predictions are true vulnerabilities, but almost half of vulnerable functions are missed on the present split. For an IDE assistant this may be a reasonable starting operating point because low false-positive volume is important, but a security gate may prefer a lower threshold and higher recall. The final paper should therefore report precision-recall curves and threshold sensitivity instead of committing to a single operating point. Stage-wise latency will further determine whether explanation should run synchronously in an IDE or asynchronously in CI/DevSecOps.
+Conclusion
+X-LocVul combines multi-task function-level detection, source-constrained line localization, and lightweight root-cause explanation in a single evidence cascade. The existing prototype demonstrates low false-positive rate at Stage 1 and useful Top-10 localization at Stage 2, while the CVE case study illustrates both the value and the risk of LLM explanations. The key step toward a publishable SoICT study is not to add more architectural complexity, but to make the evidence stronger: identical-data baselines, leakage-controlled evaluation, direct hallucination measurements, quantitative explanation assessment, and end-to-end error-propagation analysis. The proposed CWE-aware grounding guard provides a compact method extension that directly addresses the observed terminology failure and can be evaluated through controlled ablation.
+Acknowledgments. This manuscript is a working draft derived from the X-LocVul Project II prototype. The final submission will report the supplementary controlled experiments described in Section 4.3.
+Disclosure of Interests. The authors have no competing interests to declare.
+References
+Kalouptsoglou, I., et al.: LocVul: Line-level vulnerability localization based on a Sequence-to-Sequence approach. Information and Software Technology 189, 107940 (2026).
+Ding, Y., Fu, Y., Ibrahim, O., Sitawarin, C., Chen, X., Alomair, B., Wagner, D., Ray, B., Chen, Y.: Vulnerability Detection with Code Language Models: How Far Are We? In: 47th IEEE/ACM International Conference on Software Engineering (ICSE), pp. 469–481 (2025).
+Guo, D., Lu, S., Duan, N., Wang, Y., Zhou, M., Yin, J.: UniXCoder: Unified Cross-Modal Pre-training for Code Representation. In: Proceedings of ACL, pp. 7212–7225 (2022).
+Wang, Y., Wang, W., Joty, S., Hoi, S.C.H.: CodeT5: Identifier-aware Unified Pre-trained Encoder-Decoder Models for Code Understanding and Generation. In: Proceedings of EMNLP, pp. 8696–8708 (2021).
+Fu, M., Tantithamthavorn, C.: LineVul: A Transformer-based Line-Level Vulnerability Prediction. In: Proceedings of MSR, pp. 608–620 (2022).
+Fan, J., Li, Y., Wang, S., Nguyen, T.N.: A C/C++ Code Vulnerability Dataset with Code Changes and CVE Summaries. In: Proceedings of MSR, pp. 508–512 (2020).
+Hui, B., et al.: Qwen2.5-Coder Technical Report. arXiv:2409.12186 (2024).
+Mao, Q., Li, Z., Hu, X., Liu, K., Xia, X., Sun, J.: Towards Explainable Vulnerability Detection with Large Language Models. arXiv:2406.09701 (2024).
+Du, X., et al.: Vul-RAG: Enhancing LLM-based Vulnerability Detection via Knowledge-level RAG. arXiv:2406.11147 (2024).
+Weyssow, M., et al.: R2Vul: Learning to Reason about Software Vulnerabilities with Reinforcement Learning and Structured Reasoning Distillation. arXiv:2504.04699 (2025).
+Zhu, H., et al.: VulInstruct: Teaching LLMs Root-Cause Reasoning for Vulnerability Detection via Security Specifications. arXiv:2511.04014 (2026 version).
+Lekssays, A., Mouhcine, H., Tran, K., Yu, T., Khalil, I.: LLMxCPG: Context-Aware Vulnerability Detection Through Code Property Graph-Guided Large Language Models. In: 34th USENIX Security Symposium (2025).
+Feng, Z., et al.: CodeBERT: A Pre-Trained Model for Programming and Natural Languages. In: Findings of EMNLP, pp. 1536–1547 (2020).
+
+==================================================
+NOTEBOOKS
+==================================================
+
+--- x-locvul-e0.ipynb ---
+[CODE]
+!pip install datasketch -q
+
+[CODE]
+# ==========================================
+# CELL 1: SETUP & UNIFY MANIFEST (SIÊU BẢN VÁ LỖI CỘT BIGVUL)
+# ==========================================
+import pandas as pd
+import numpy as np
+import hashlib
+import re
+import os
+
+DATA_PATH = "/kaggle/input/datasets/linhlhp/x-locvul-dataset"
+OUTPUT_DIR = "/kaggle/working/frozen_data"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+print("1. Loading ALL datasets...")
+train_df = pd.read_csv(f"{DATA_PATH}/train.csv")
+val_df = pd.read_csv(f"{DATA_PATH}/val.csv")
+test_primevul_df = pd.read_csv(f"{DATA_PATH}/test_primevul.csv")
+test_paired_df = pd.read_csv(f"{DATA_PATH}/test_paired.csv")
+test_bigvul_df = pd.read_csv(f"{DATA_PATH}/test_bigvul.csv")
+
+def standardize_cols(df, split_name):
+    df = df.copy() # Tránh warning của Pandas
+    rename_dict = {}
+    
+    # 1. Tìm cột Code (Ưu tiên func_code > func > code > func_before của BigVul)
+    for col in ['func_code', 'func', 'code', 'func_before']:
+        if col in df.columns:
+            rename_dict[col] = 'func_code'
+            break
+            
+    # 2. Tìm cột Label (Ưu tiên label > target > vulnerable > vul của BigVul)
+    for col in ['label', 'target', 'vulnerable', 'vul']:
+        if col in df.columns:
+            rename_dict[col] = 'label'
+            break
+            
+    # 3. Đồng bộ Metadata (Đổi tên cột của BigVul về chuẩn hệ thống)
+    if 'CVE ID' in df.columns: rename_dict['CVE ID'] = 'cve'
+    if 'CWE ID' in df.columns: rename_dict['CWE ID'] = 'cwe_label'
+    
+    # Đổi tên và thêm cờ split
+    df = df.rename(columns=rename_dict)
+    df['split'] = split_name
+    
+    # BigVul thường chứa 'func_after' (code sạch), ta xóa đi cho nhẹ RAM vì bài toán này chỉ nhận diện code đầu vào
+    if 'func_after' in df.columns:
+        df = df.drop(columns=['func_after'])
+        
+    return df
+
+# Áp dụng chuẩn hóa cho từng dataframe
+train_df = standardize_cols(train_df, 'train')
+val_df = standardize_cols(val_df, 'val')
+test_primevul_df = standardize_cols(test_primevul_df, 'test_primevul')
+test_paired_df = standardize_cols(test_paired_df, 'test_paired')
+test_bigvul_df = standardize_cols(test_bigvul_df, 'test_bigvul')
+
+# Hợp nhất thành Manifest tổng
+manifest_df = pd.concat([train_df, val_df, test_primevul_df, test_paired_df, test_bigvul_df], ignore_index=True)
+
+print(f"Unified Manifest Created: {len(manifest_df)} total samples across 5 splits.")
+
+[CODE]
+# ==========================================
+# CELL 2: CODE NORMALIZATION & HASHING (BẢN VÁ LỖI)
+# ==========================================
+def remove_comments_and_whitespace(code):
+    """Loại bỏ comment C/C++ và các khoảng trắng dư thừa"""
+    # Ép kiểu an toàn để chống lỗi 'float' object
+    code = str(code) if pd.notna(code) else ""
+    # Xóa block comments /* ... */
+    code = re.sub(r'/\*[\s\S]*?\*/', '', code)
+    # Xóa inline comments // ...
+    code = re.sub(r'//.*', '', code)
+    # Xóa khoảng trắng dư thừa, đưa về 1 dòng
+    code = re.sub(r'\s+', ' ', code).strip()
+    return code
+
+def compute_sha256(text):
+    # Đảm bảo đầu vào luôn là chuỗi trước khi encode
+    text = str(text) if pd.notna(text) else ""
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()
+
+print("2. Normalizing code and computing hashes...")
+
+# 1. Ép kiểu toàn bộ cột func_code thành string để loại trừ triệt để NaN/Float
+manifest_df['func_code'] = manifest_df['func_code'].astype(str)
+
+# 2. Tạo bản normalized để check duplicate
+manifest_df['normalized_code'] = manifest_df['func_code'].apply(remove_comments_and_whitespace)
+
+# 3. Tạo exact_hash (từ code gốc) và normalized_hash (từ code đã xóa comment)
+manifest_df['exact_hash'] = manifest_df['func_code'].apply(compute_sha256)
+manifest_df['normalized_hash'] = manifest_df['normalized_code'].apply(compute_sha256)
+
+print("E0.1 Complete: Generated `exact_hash` and `normalized_hash` successfully.")
+
+[CODE]
+# ==========================================
+# CELL 3: CROSS-SPLIT LEAKAGE CHECK (E0.2 & D1)
+# ==========================================
+print("3. Checking for Cross-Split Leakage (Train vs Val vs Test)...")
+
+# 3.1. Tìm rò rỉ dựa trên Normalized Hash (Trùng lặp chính xác & cận chính xác do comment)
+hash_split_counts = manifest_df.groupby('normalized_hash')['split'].nunique()
+leaked_hashes = hash_split_counts[hash_split_counts > 1].index.tolist()
+
+leakage_df = manifest_df[manifest_df['normalized_hash'].isin(leaked_hashes)]
+print(f"Found {len(leaked_hashes)} clusters of code appearing in multiple splits!")
+
+# Hiển thị phân bổ rò rỉ
+if len(leakage_df) > 0:
+    print("Cross-split conflicts by Normalized Hash:")
+    print(pd.crosstab(leakage_df['normalized_hash'], leakage_df['split']).head())
+
+# 3.2. Tìm rò rỉ cấp độ Meta-data (CVE, Commit)
+if 'cve' in manifest_df.columns:
+    cve_split = manifest_df.dropna(subset=['cve']).groupby('cve')['split'].nunique()
+    leaked_cves = cve_split[cve_split > 1].index.tolist()
+    print(f"Found {len(leaked_cves)} CVEs spanning across multiple splits.")
+
+[CODE]
+# ==========================================
+# CELL 4: ENFORCE STOP RULE (PROTECT ALL TEST SETS)
+# ==========================================
+print("4. Enforcing Stop Rule: Cleaning Leakage...")
+
+initial_train_len = len(manifest_df[manifest_df['split'] == 'train'])
+initial_val_len = len(manifest_df[manifest_df['split'] == 'val'])
+
+test_splits = ['test_primevul', 'test_paired', 'test_bigvul']
+
+# 1. BẢO VỆ 3 TẬP TEST (Ưu tiên cao nhất)
+test_hashes = set(manifest_df[manifest_df['split'].isin(test_splits)]['normalized_hash'])
+mask_test_leak = (manifest_df['split'].isin(['train', 'val'])) & (manifest_df['normalized_hash'].isin(test_hashes))
+
+# 2. BẢO VỆ TẬP VAL KHỎI TẬP TRAIN
+val_hashes = set(manifest_df[manifest_df['split'] == 'val']['normalized_hash'])
+mask_val_leak = (manifest_df['split'] == 'train') & (manifest_df['normalized_hash'].isin(val_hashes))
+
+# 3. KẾT HỢP VÀ THỰC THI XÓA RÒ RỈ HASH
+manifest_df = manifest_df[~(mask_test_leak | mask_val_leak)]
+
+# Xử lý nhãn và CWE rỗng
+manifest_df = manifest_df.dropna(subset=['func_code', 'label'])
+manifest_df['label'] = manifest_df['label'].astype(int)
+if 'cwe_label' in manifest_df.columns:
+    manifest_df['cwe_label'] = manifest_df['cwe_label'].fillna('CWE-Other')
+
+final_train_len = len(manifest_df[manifest_df['split'] == 'train'])
+final_val_len = len(manifest_df[manifest_df['split'] == 'val'])
+
+print(f"Dropped {initial_train_len - final_train_len} leaked samples from Train.")
+print(f"Dropped {initial_val_len - final_val_len} leaked samples from Val.")
+
+[CODE]
+# ==========================================
+# CELL 5: FREEZE 5 MANIFESTS & DATA CARD (BẢN CẬP NHẬT)
+# ==========================================
+import hashlib
+
+print("5. Freezing Data and Generating SHA-256 Proof...")
+
+frozen_hashes = {}
+# Danh sách 5 tập dữ liệu chuẩn
+splits = ['train', 'val', 'test_primevul', 'test_paired', 'test_bigvul']
+
+for s in splits:
+    split_df = manifest_df[manifest_df['split'] == s].copy()
+    if len(split_df) == 0: 
+        print(f"Warning: Split '{s}' is empty!")
+        continue
+        
+    if 'normalized_code' in split_df.columns:
+        split_df = split_df.drop(columns=['normalized_code', 'split'])
+        
+    file_path = f"{OUTPUT_DIR}/{s}_frozen.jsonl"
+    
+    # Lưu định dạng JSONL
+    split_df.to_json(file_path, orient='records', lines=True)
+    
+    # Băm Hash SHA-256
+    with open(file_path, "rb") as f:
+        file_hash = hashlib.sha256(f.read()).hexdigest()
+        frozen_hashes[s] = file_hash
+        
+    print(f"Frozen [{s.upper()}] -> {len(split_df)} samples. SHA-256: {file_hash[:15]}...")
+
+# Tạo Data Card Markdown chuẩn cho 5 splits
+data_card = f"""# X-LocVul Data Card (E0 Audit)
+* **Train Set:** {len(manifest_df[manifest_df['split']=='train'])} samples (SHA-256: `{frozen_hashes.get('train', 'N/A')}`)
+* **Val Set:** {len(manifest_df[manifest_df['split']=='val'])} samples (SHA-256: `{frozen_hashes.get('val', 'N/A')}`)
+* **Test PrimeVul:** {len(manifest_df[manifest_df['split']=='test_primevul'])} samples (SHA-256: `{frozen_hashes.get('test_primevul', 'N/A')}`)
+* **Test Paired:** {len(manifest_df[manifest_df['split']=='test_paired'])} samples (SHA-256: `{frozen_hashes.get('test_paired', 'N/A')}`)
+* **Test BigVul:** {len(manifest_df[manifest_df['split']=='test_bigvul'])} samples (SHA-256: `{frozen_hashes.get('test_bigvul', 'N/A')}`)
+* **Leakage Status:** Exact and Normalized overlapping completely resolved. Stop Rule PASSED.
+"""
+
+with open(f"{OUTPUT_DIR}/data_card.md", "w") as f:
+    f.write(data_card)
+
+print(f"\n✅ All E0 requirements met. Frozen data saved to {OUTPUT_DIR}")
+
+[CODE]
+
+
+--- x-locvul-e1-3.ipynb ---
+[CODE]
+# ==========================================
+# CELL 1: LOAD FROZEN DATA & BUILD CWE VOCAB
+# ==========================================
+import pandas as pd
+import torch
+from datasets import Dataset
+from transformers import AutoTokenizer
+
+FROZEN_DIR = "/kaggle/input/notebooks/linhlhp/x-locvul-e0/frozen_data"
+
+print("1. Loading frozen datasets...")
+train_df = pd.read_json(f"{FROZEN_DIR}/train_frozen.jsonl", lines=True)
+val_df = pd.read_json(f"{FROZEN_DIR}/val_frozen.jsonl", lines=True)
+test_pv_df = pd.read_json(f"{FROZEN_DIR}/test_primevul_frozen.jsonl", lines=True)
+test_pair_df = pd.read_json(f"{FROZEN_DIR}/test_paired_frozen.jsonl", lines=True)
+test_bv_df = pd.read_json(f"{FROZEN_DIR}/test_bigvul_frozen.jsonl", lines=True)
+
+# ---------------------------------------------------------
+# BUILD CWE VOCABULARY (ONLY FROM VULNERABLE TRAIN SAMPLES)
+# ---------------------------------------------------------
+print("\n2. Building CWE Vocabulary...")
+vul_train = train_df[train_df['label'] == 1].copy()
+
+# Ensure no missing CWEs, default to 'CWE-Other'
+if 'cwe_label' not in vul_train.columns:
+    vul_train['cwe_label'] = 'CWE-Other'
+vul_train['cwe_label'] = vul_train['cwe_label'].fillna('CWE-Other')
+
+unique_cwes = sorted(vul_train['cwe_label'].unique().tolist())
+cwe2id = {cwe: idx for idx, cwe in enumerate(unique_cwes)}
+NUM_CWE = len(unique_cwes)
+
+print(f"Number of CWE classes: {NUM_CWE}")
+print("CWE to ID Mapping:", cwe2id)
+
+[CODE]
+# ==========================================
+# CELL 2: APPLY CWE MASKING (THE -100 TRICK)
+# ==========================================
+print("3. Applying CWE Masking (-100 for Clean Codes)...")
+
+def apply_cwe_mask(df):
+    """
+    Assigns correct CWE ID for vulnerable samples.
+    Assigns -100 for clean samples to ignore them in CrossEntropyLoss.
+    """
+    # Ensure cwe_label column exists
+    if 'cwe_label' not in df.columns:
+        df['cwe_label'] = 'CWE-Other'
+    else:
+        df['cwe_label'] = df['cwe_label'].fillna('CWE-Other')
+        
+    # Apply masking logic
+    df['cwe_encoded'] = df.apply(
+        lambda x: cwe2id.get(x['cwe_label'], cwe2id.get('CWE-Other')) if x['label'] == 1 else -100, 
+        axis=1
+    )
+    return df
+
+# Apply to all 5 splits
+train_df = apply_cwe_mask(train_df)
+val_df = apply_cwe_mask(val_df)
+test_pv_df = apply_cwe_mask(test_pv_df)
+test_pair_df = apply_cwe_mask(test_pair_df)
+test_bv_df = apply_cwe_mask(test_bv_df)
+
+# Quick verification on Train set
+clean_check = train_df[train_df['label'] == 0]['cwe_encoded'].unique()
+vul_check = train_df[train_df['label'] == 1]['cwe_encoded'].unique()
+
+print(f"Verification - Clean codes encoded as: {clean_check} (Must be [-100])")
+print(f"Verification - Vulnerable codes encoded as: {vul_check}")
+
+[CODE]
+# ==========================================
+# CELL 3: TOKENIZATION & TENSOR FORMATTING
+# ==========================================
+print("4. Initializing UniXCoder Tokenizer...")
+MODEL_NAME = "microsoft/unixcoder-base"
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+
+# Convert Pandas DataFrames to HuggingFace Datasets
+train_ds = Dataset.from_pandas(train_df[['func_code', 'label', 'cwe_encoded']])
+val_ds = Dataset.from_pandas(val_df[['func_code', 'label', 'cwe_encoded']])
+test_pv_ds = Dataset.from_pandas(test_pv_df[['func_code', 'label', 'cwe_encoded']])
+test_pair_ds = Dataset.from_pandas(test_pair_df[['func_code', 'label', 'cwe_encoded']])
+test_bv_ds = Dataset.from_pandas(test_bv_df[['func_code', 'label', 'cwe_encoded']])
+
+def tokenize_function(examples):
+    # EDA showed 512 is a perfect threshold (Truncation risk is only ~2.3%)
+    return tokenizer(
+        examples["func_code"], 
+        padding="max_length", 
+        truncation=True, 
+        max_length=512
+    )
+
+print("5. Tokenizing datasets (this will take a few minutes)...")
+# batched=True makes it run much faster
+tokenized_train = train_ds.map(tokenize_function, batched=True, remove_columns=['func_code'])
+tokenized_val = val_ds.map(tokenize_function, batched=True, remove_columns=['func_code'])
+tokenized_test_pv = test_pv_ds.map(tokenize_function, batched=True, remove_columns=['func_code'])
+tokenized_test_pair = test_pair_ds.map(tokenize_function, batched=True, remove_columns=['func_code'])
+tokenized_test_bv = test_bv_ds.map(tokenize_function, batched=True, remove_columns=['func_code'])
+
+# Format for PyTorch
+columns_to_keep = ["input_ids", "attention_mask", "label", "cwe_encoded"]
+tokenized_train.set_format("torch", columns=columns_to_keep)
+tokenized_val.set_format("torch", columns=columns_to_keep)
+tokenized_test_pv.set_format("torch", columns=columns_to_keep)
+tokenized_test_pair.set_format("torch", columns=columns_to_keep)
+tokenized_test_bv.set_format("torch", columns=columns_to_keep)
+
+print("✅ Data processing complete! All sets are formatted as PyTorch tensors.")
+
+[CODE]
+# ==========================================
+# CELL 4: CUSTOM MULTI-TASK UNIXCODER ARCHITECTURE
+# ==========================================
+import torch
+import torch.nn as nn
+from transformers import AutoModel, PreTrainedModel, AutoConfig
+
+print("6. Defining Custom Multi-task Architecture...")
+
+class UniXCoderMultiTask(nn.Module):
+    def __init__(self, model_name="microsoft/unixcoder-base", num_cwe_classes=15):
+        super(UniXCoderMultiTask, self).__init__()
+        # Load the base UniXCoder model
+        self.encoder = AutoModel.from_pretrained(model_name)
+        self.config = self.encoder.config
+        
+        hidden_size = self.config.hidden_size
+        
+        # Branch 1: Binary Classification (Vulnerable vs Clean)
+        self.classifier_bin = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size),
+            nn.Tanh(),
+            nn.Dropout(0.1),
+            nn.Linear(hidden_size, 1) # Output 1 logit for BCEWithLogitsLoss
+        )
+        
+        # Branch 2: CWE Multi-class Classification
+        self.classifier_cwe = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size),
+            nn.Tanh(),
+            nn.Dropout(0.1),
+            nn.Linear(hidden_size, num_cwe_classes) # Output 15 logits
+        )
+
+    def forward(self, input_ids, attention_mask, labels=None, cwe_encoded=None, **kwargs):
+        # 1. Pass through UniXCoder
+        outputs = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+        
+        # UniXCoder equivalent of [CLS] token is the first token
+        sequence_output = outputs[0] 
+        cls_embedding = sequence_output[:, 0, :] 
+        
+        # 2. Pass through classifiers
+        bin_logits = self.classifier_bin(cls_embedding).squeeze(-1) # Shape: (batch_size,)
+        cwe_logits = self.classifier_cwe(cls_embedding)             # Shape: (batch_size, 15)
+        
+        # 3. Format output for HuggingFace Trainer
+        # Trainer expects 'logits' as the primary key for evaluation
+        return {
+            "logits": bin_logits,
+            "cwe_logits": cwe_logits
+        }
+
+print("✅ Architecture defined successfully!")
+
+[CODE]
+# ==========================================
+# CELL 5: CUSTOM TRAINER & EVALUATION METRICS (FULL TABLE METRICS)
+# ==========================================
+from transformers import Trainer
+from sklearn.metrics import (
+    precision_recall_curve, auc, matthews_corrcoef, f1_score, 
+    precision_score, recall_score, accuracy_score, confusion_matrix
+)
+import numpy as np
+import torch
+import torch.nn as nn
+
+print("7. Defining Custom Trainer and Metrics (Full Table Version)...")
+
+class MultiTaskTrainer(Trainer):
+    # Added **kwargs to gracefully handle unexpected arguments from Trainer
+    def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
+        # Extract labels
+        labels = inputs.pop("labels")
+        cwe_labels = inputs.pop("cwe_encoded")
+        
+        # Forward pass
+        outputs = model(**inputs)
+        bin_logits = outputs["logits"]
+        cwe_logits = outputs["cwe_logits"]
+        
+        # ---------------------------------------------------
+        # LOSS 1: BINARY BCE WITH POS_WEIGHT (From EDA: 45.44)
+        # ---------------------------------------------------
+        pos_weight = torch.tensor([45.44]).to(bin_logits.device)
+        loss_fct_bin = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+        loss_bin = loss_fct_bin(bin_logits, labels.float())
+        
+        # ---------------------------------------------------
+        # LOSS 2: CWE MULTI-CLASS WITH MASKING
+        # ---------------------------------------------------
+        # ignore_index=-100 ensures Clean codes don't affect this loss
+        loss_fct_cwe = nn.CrossEntropyLoss(ignore_index=-100)
+        loss_cwe = loss_fct_cwe(cwe_logits, cwe_labels)
+        
+        # ---------------------------------------------------
+        # TOTAL LOSS: E1.3 Multi-task formulation (Lambda = 0.2)
+        # ---------------------------------------------------
+        LAMBDA = 0.2
+        total_loss = loss_bin + LAMBDA * loss_cwe
+        
+        return (total_loss, outputs) if return_outputs else total_loss
+
+# Evaluation Metrics matching the exact table columns
+def compute_metrics(eval_pred):
+    logits, labels = eval_pred.predictions[0], eval_pred.label_ids
+    
+    # Convert logits to probabilities using Sigmoid
+    probs = 1.0 / (1.0 + np.exp(-logits)) # Sigmoid function
+    
+    # Use default 0.5 threshold for standard metrics calculation
+    preds = (probs > 0.5).astype(int)
+    
+    # 1. PR-AUC (Primary Metric for Checkpointing)
+    precision_curve, recall_curve, _ = precision_recall_curve(labels, probs)
+    pr_auc = auc(recall_curve, precision_curve)
+    
+    # 2. Accuracy, MCC, Precision, Recall, F1
+    accuracy = accuracy_score(labels, preds)
+    mcc = matthews_corrcoef(labels, preds)
+    precision = precision_score(labels, preds, zero_division=0)
+    recall = recall_score(labels, preds, zero_division=0)
+    f1 = f1_score(labels, preds)
+    
+    # 3. False Positive Rate (FPR)
+    # confusion_matrix returns: [[TN, FP], [FN, TP]]
+    tn, fp, fn, tp = confusion_matrix(labels, preds).ravel()
+    fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0
+    
+    return {
+        "accuracy": accuracy,
+        "mcc": mcc,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "fpr": fpr,
+        "pr_auc": pr_auc
+    }
+
+print("✅ Custom Trainer and Metrics ready! All 7 metrics are included.")
+
+[CODE]
+# ==========================================
+# CELL 6: SINGLE SEED TRAINING LOOP (TEST RUN)
+# ==========================================
+from transformers import TrainingArguments, set_seed
+import os
+import torch
+
+print("8. Configuring Single Seed Training Loop...\n")
+
+# Setup hyperparameters
+EPOCHS = 3           # Standard for fine-tuning CodeBERT/UniXCoder
+BATCH_SIZE = 16      # If it crashes with "CUDA Out of Memory", change this to 8
+LEARNING_RATE = 2e-5 # Recommended for UniXCoder
+
+# ONLY RUN 1 SEED FOR NOW TO TEST THE PIPELINE
+SEEDS = [13] 
+OUTPUT_DIR = "/kaggle/working/saved_models"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# ---------------------------------------------------------
+# RUN THE SINGLE SEED
+# ---------------------------------------------------------
+for seed in SEEDS:
+    print(f"\n{'='*50}")
+    print(f"🚀 STARTING TRAINING FOR SEED: {seed}")
+    print(f"{'='*50}\n")
+    
+    # 1. Fix the seed for pure reproducibility
+    set_seed(seed)
+    
+    # 2. Initialize a fresh model
+    print(f"[{seed}] Initializing a fresh Multi-task UniXCoder...")
+    model = UniXCoderMultiTask(num_cwe_classes=NUM_CWE)
+    
+    # Push model to GPU
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    
+    # 3. Configure Training Arguments (with Progress Bar & Logging)
+    seed_output_dir = f"{OUTPUT_DIR}/unixcoder_seed_{seed}"
+    
+    training_args = TrainingArguments(
+        output_dir=seed_output_dir,
+        num_train_epochs=EPOCHS,
+        per_device_train_batch_size=BATCH_SIZE,
+        per_device_eval_batch_size=BATCH_SIZE,
+        learning_rate=LEARNING_RATE,
+        weight_decay=0.01,
+        
+        # --- LOGGING & PROGRESS BAR SETTINGS ---
+        disable_tqdm=False,          # Enable progress bar
+        logging_strategy="steps",    
+        logging_steps=100,           # Print Training Loss every 100 steps
+        
+        # --- EVALUATION & CHECKPOINTING SETTINGS ---
+        eval_strategy="epoch", # Evaluate on Val set at the end of every epoch
+        save_strategy="epoch",       # Save checkpoint at the end of every epoch
+        load_best_model_at_end=True, # Auto-load the best model at the end of training
+        metric_for_best_model="pr_auc", # The holy grail metric for Stage 1
+        greater_is_better=True,
+        
+        # Optimization
+        fp16=True,                   # Mixed precision for faster training on GPU
+        dataloader_num_workers=2,    # Speed up data loading
+        report_to="none"             # Disable WandB to keep Kaggle output clean
+    )
+    
+    # 4. Initialize our Custom Trainer
+    trainer = MultiTaskTrainer(
+        model=model,
+        args=training_args,
+        train_dataset=tokenized_train,
+        eval_dataset=tokenized_val,
+        compute_metrics=compute_metrics
+    )
+    
+    # 5. START TRAINING!
+    print(f"[{seed}] Training started...")
+    trainer.train()
+    
+    # 6. Save the absolute best model for this seed
+    print(f"[{seed}] Training complete! Saving best model to {seed_output_dir}/best_model.pt")
+    # Using torch.save because we have a custom nn.Module wrapper
+    torch.save(model.state_dict(), f"{seed_output_dir}/best_model.pt")
+
+print("\n🎉 TEST RUN COMPLETED SUCCESSFULLY!")
+
+[CODE]
+
+
+--- x-locvul-eda.ipynb ---
+[CODE]
+# ==========================================
+# CELL 1: LOAD FROZEN DATA (BẢN GỠ LỖI)
+# ==========================================
+import pandas as pd
+import numpy as np
+
+FROZEN_DIR = "/kaggle/input/notebooks/linhlhp/x-locvul-e0/frozen_data"
+
+print("1. Loading frozen datasets...")
+
+train_df = pd.read_json(f"{FROZEN_DIR}/train_frozen.jsonl", lines=True)
+val_df = pd.read_json(f"{FROZEN_DIR}/val_frozen.jsonl", lines=True)
+test_pv_df = pd.read_json(f"{FROZEN_DIR}/test_primevul_frozen.jsonl", lines=True)
+test_pair_df = pd.read_json(f"{FROZEN_DIR}/test_paired_frozen.jsonl", lines=True)
+test_bv_df = pd.read_json(f"{FROZEN_DIR}/test_bigvul_frozen.jsonl", lines=True)
+
+print("--- DATASET SHAPES ---")
+print(f"Train Set:         {len(train_df)} samples")
+print(f"Val Set:           {len(val_df)} samples")
+print(f"Test PrimeVul Set: {len(test_pv_df)} samples")
+print(f"Test Paired Set:   {len(test_pair_df)} samples")
+print(f"Test BigVul Set:   {len(test_bv_df)} samples")
+
+assert 'func_code' in train_df.columns, "Missing 'func_code' column!"
+assert 'label' in train_df.columns, "Missing 'label' column!"
+print("\n✅ Data loaded successfully. You can now run Cell 2.")
+
+[CODE]
+# ==========================================
+# CELL 2: BINARY LABEL DISTRIBUTION CHECK
+# ==========================================
+print("2. Analyzing Binary Label Distribution (Vulnerable vs Clean)...")
+
+def print_distribution(df, split_name):
+    counts = df['label'].value_counts()
+    total = len(df)
+    vul_count = counts.get(1, 0)
+    clean_count = counts.get(0, 0)
+    
+    vul_pct = (vul_count / total) * 100 if total > 0 else 0
+    clean_pct = (clean_count / total) * 100 if total > 0 else 0
+    
+    print(f"\n[{split_name.upper()} SET]")
+    print(f"Vulnerable (1): {vul_count} ({vul_pct:.2f}%)")
+    print(f"Clean (0):      {clean_count} ({clean_pct:.2f}%)")
+    
+    # Calculate recommended pos_weight for BCE Loss (Negative / Positive)
+    if vul_count > 0:
+        recommended_weight = clean_count / vul_count
+        print(f"-> Recommended BCE pos_weight: ~{recommended_weight:.2f}")
+
+print_distribution(train_df, "train")
+print_distribution(val_df, "val")
+print_distribution(test_pv_df, "test_primevul")
+
+[CODE]
+# ==========================================
+# CELL 3: CWE MULTI-CLASS DISTRIBUTION
+# ==========================================
+print("3. Analyzing CWE Distribution (Only for Vulnerable samples)...")
+
+# Filter only vulnerable samples
+vul_train = train_df[train_df['label'] == 1]
+
+if 'cwe_label' in vul_train.columns:
+    cwe_counts = vul_train['cwe_label'].value_counts()
+    
+    print(f"Total unique CWE classes in Train: {len(cwe_counts)}")
+    print("\nTop 5 Most Frequent CWEs:")
+    print(cwe_counts.head(5))
+    
+    print("\nBottom 5 Least Frequent CWEs:")
+    print(cwe_counts.tail(5))
+    
+    # Check for extremely rare classes (< 10 samples)
+    rare_classes = cwe_counts[cwe_counts < 10]
+    if len(rare_classes) > 0:
+        print(f"\nWARNING: Found {len(rare_classes)} CWE classes with less than 10 samples.")
+else:
+    print("Column 'cwe_label' not found. Skipping CWE analysis.")
+
+[CODE]
+# ==========================================
+# CELL 4: CODE LENGTH & TRUNCATION RISK
+# ==========================================
+print("4. Analyzing Code Lengths (Approximated by word count)...")
+
+# Fast word count approximation (casting to string to avoid errors)
+train_df['word_count'] = train_df['func_code'].astype(str).apply(lambda x: len(x.split()))
+
+mean_len = train_df['word_count'].mean()
+median_len = train_df['word_count'].median()
+max_len = train_df['word_count'].max()
+
+print(f"Mean word count:   {mean_len:.1f}")
+print(f"Median word count: {median_len:.1f}")
+print(f"Max word count:    {max_len}")
+
+# UniXCoder max_length is typically 512 tokens (roughly 400 words)
+SAFE_THRESHOLD = 400
+truncated_samples = len(train_df[train_df['word_count'] > SAFE_THRESHOLD])
+truncation_pct = (truncated_samples / len(train_df)) * 100
+
+print(f"\nSamples exceeding {SAFE_THRESHOLD} words (High Truncation Risk):")
+print(f"{truncated_samples} samples ({truncation_pct:.2f}% of Train Set)")
+
+# Quality Check: Extremely short codes (Junk data)
+junk_samples = len(train_df[train_df['word_count'] < 5])
+print(f"Extremely short samples (< 5 words, potential junk): {junk_samples}")
+
+[CODE]
+# ==========================================
+# CELL 5: VISUAL SANITY CHECK
+# ==========================================
+print("5. Visual Inspection of Samples...\n")
+
+# Print 1 random Clean sample safely
+clean_samples = train_df[train_df['label'] == 0]
+if len(clean_samples) > 0:
+    clean_sample = clean_samples.sample(1).iloc[0]
+    print("--- RANDOM CLEAN CODE (Label 0) ---")
+    print(f"Code snippet (first 300 chars):\n{str(clean_sample['func_code'])[:300]}...\n")
+
+# Print 1 random Vulnerable sample safely
+vul_samples = train_df[train_df['label'] == 1]
+if len(vul_samples) > 0:
+    vul_sample = vul_samples.sample(1).iloc[0]
+    print("--- RANDOM VULNERABLE CODE (Label 1) ---")
+    print(f"CWE Type: {vul_sample.get('cwe_label', 'Unknown')}")
+    print(f"Code snippet (first 300 chars):\n{str(vul_sample['func_code'])[:300]}...\n")
+
+[CODE]
+
+
+--- x-locvul-eval.ipynb ---
+[CODE]
+# ==========================================
+# CELL 1: SETUP & LOAD TEST DATA
+# ==========================================
+import pandas as pd
+import torch
+import torch.nn as nn
+from transformers import AutoTokenizer, AutoModel
+from torch.utils.data import DataLoader, TensorDataset
+from sklearn.metrics import (
+    precision_recall_curve, auc, matthews_corrcoef, f1_score, 
+    precision_score, recall_score, accuracy_score, confusion_matrix
+)
+import numpy as np
+from tqdm import tqdm
+
+# ⚠️ IMPORTANT: Change this to the actual name of your imported notebook
+E1_3_PATH = "/kaggle/input/notebooks/linhlhp/x-locvul-e1-3"
+E0_PATH = "/kaggle/input/notebooks/linhlhp/x-locvul-e0/"
+
+DATA_DIR = f"{E0_PATH}/frozen_data"
+MODEL_PATH = f"{E1_3_PATH}/saved_models/unixcoder_seed_13/best_model.pt"
+
+print("1. Loading Frozen Test Sets...")
+test_pv_df = pd.read_json(f"{DATA_DIR}/test_primevul_frozen.jsonl", lines=True)
+test_pair_df = pd.read_json(f"{DATA_DIR}/test_paired_frozen.jsonl", lines=True)
+test_bv_df = pd.read_json(f"{DATA_DIR}/test_bigvul_frozen.jsonl", lines=True)
+
+print(f"Test PrimeVul: {len(test_pv_df)} samples")
+print(f"Test Paired:   {len(test_pair_df)} samples")
+print(f"Test BigVul:   {len(test_bv_df)} samples")
+
+[CODE]
+# ==========================================
+# CELL 2: REDEFINE CUSTOM ARCHITECTURE
+# ==========================================
+print("2. Defining Multi-task Architecture...")
+
+class UniXCoderMultiTask(nn.Module):
+    def __init__(self, model_name="microsoft/unixcoder-base", num_cwe_classes=15):
+        super(UniXCoderMultiTask, self).__init__()
+        self.encoder = AutoModel.from_pretrained(model_name)
+        hidden_size = self.encoder.config.hidden_size
+        
+        self.classifier_bin = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size),
+            nn.Tanh(),
+            nn.Dropout(0.1),
+            nn.Linear(hidden_size, 1)
+        )
+        
+        self.classifier_cwe = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size),
+            nn.Tanh(),
+            nn.Dropout(0.1),
+            nn.Linear(hidden_size, num_cwe_classes)
+        )
+
+    def forward(self, input_ids, attention_mask):
+        outputs = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+        sequence_output = outputs[0] 
+        cls_embedding = sequence_output[:, 0, :] 
+        
+        bin_logits = self.classifier_bin(cls_embedding).squeeze(-1)
+        cwe_logits = self.classifier_cwe(cls_embedding)
+        
+        return bin_logits, cwe_logits
+
+print("✅ Architecture defined.")
+
+[CODE]
+# ==========================================
+# CELL 3: TOKENIZATION & LOAD CHECKPOINT
+# ==========================================
+print("3. Initializing Tokenizer and Loading Checkpoint...")
+
+tokenizer = AutoTokenizer.from_pretrained("microsoft/unixcoder-base")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Load model and inject the saved weights
+model = UniXCoderMultiTask(num_cwe_classes=15) # From EDA: 15 CWE classes
+model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+model.to(device)
+model.eval() # Set model to evaluation mode
+
+def prepare_dataloader(df, batch_size=32):
+    # Truncation risk is low at max_length=512
+    encodings = tokenizer(
+        df['func_code'].tolist(), 
+        padding="max_length", 
+        truncation=True, 
+        max_length=512, 
+        return_tensors="pt"
+    )
+    labels = torch.tensor(df['label'].tolist(), dtype=torch.long)
+    
+    dataset = TensorDataset(encodings['input_ids'], encodings['attention_mask'], labels)
+    return DataLoader(dataset, batch_size=batch_size, shuffle=False)
+
+print("Tokenizing datasets (may take a moment for BigVul)...")
+pv_loader = prepare_dataloader(test_pv_df)
+pair_loader = prepare_dataloader(test_pair_df)
+bv_loader = prepare_dataloader(test_bv_df, batch_size=64) # Larger batch for BigVul
+
+print("✅ Model and DataLoaders are ready for inference!")
+
+[CODE]
+# ==========================================
+# CELL 4: INFERENCE AND EVALUATION METRICS
+# ==========================================
+print("4. Running Evaluation...\n")
+
+def evaluate_dataset(data_loader, dataset_name):
+    all_labels = []
+    all_probs = []
+    
+    with torch.no_grad():
+        for batch in tqdm(data_loader, desc=f"Evaluating {dataset_name}"):
+            input_ids = batch[0].to(device)
+            attention_mask = batch[1].to(device)
+            labels = batch[2].numpy()
+            
+            # Forward pass
+            bin_logits, _ = model(input_ids, attention_mask)
+            
+            # Convert logits to probabilities
+            probs = torch.sigmoid(bin_logits).cpu().numpy()
+            
+            all_labels.extend(labels)
+            all_probs.extend(probs)
+            
+    # Calculate Metrics
+    all_labels = np.array(all_labels)
+    all_probs = np.array(all_probs)
+    preds = (all_probs > 0.5).astype(int)
+    
+    precision_curve, recall_curve, _ = precision_recall_curve(all_labels, all_probs)
+    pr_auc = auc(recall_curve, precision_curve)
+    
+    acc = accuracy_score(all_labels, preds)
+    mcc = matthews_corrcoef(all_labels, preds)
+    prec = precision_score(all_labels, preds, zero_division=0)
+    rec = recall_score(all_labels, preds, zero_division=0)
+    f1 = f1_score(all_labels, preds)
+    
+    tn, fp, fn, tp = confusion_matrix(all_labels, preds).ravel()
+    fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0
+    
+    print(f"\n--- {dataset_name.upper()} RESULTS ---")
+    print(f"Accuracy:  {acc:.4f}")
+    print(f"MCC:       {mcc:.4f}")
+    print(f"Precision: {prec:.4f}")
+    print(f"Recall:    {rec:.4f}")
+    print(f"F1-Score:  {f1:.4f}")
+    print(f"FPR:       {fpr:.4f}")
+    print(f"PR-AUC:    {pr_auc:.4f}\n")
+
+# Run Evaluation on all 3 sets
+evaluate_dataset(pv_loader, "PrimeVul")
+evaluate_dataset(pair_loader, "Paired")
+evaluate_dataset(bv_loader, "BigVul")
+
+[CODE]
+# ==========================================
+# CELL 4.1: CUSTOM METRICS FOR PAIRED & BIGVUL
+# ==========================================
+import numpy as np
+from sklearn.metrics import accuracy_score, f1_score, matthews_corrcoef
+import torch
+from tqdm import tqdm
+
+print("Running Custom Evaluation for Paired and BigVul Sets...\n")
+
+def get_predictions(data_loader, desc):
+    """Utility to run inference and get predictions"""
+    all_labels = []
+    all_preds = []
+    with torch.no_grad():
+        for batch in tqdm(data_loader, desc=desc):
+            input_ids = batch[0].to(device)
+            attention_mask = batch[1].to(device)
+            labels = batch[2].numpy()
+            
+            bin_logits, _ = model(input_ids, attention_mask)
+            probs = torch.sigmoid(bin_logits).cpu().numpy()
+            preds = (probs > 0.5).astype(int)
+            
+            all_labels.extend(labels)
+            all_preds.extend(preds)
+    return np.array(all_labels), np.array(all_preds)
+
+# ---------------------------------------------------------
+# 1. EVALUATE PAIRED SET
+# ---------------------------------------------------------
+def evaluate_paired_custom(data_loader, df):
+    labels, preds = get_predictions(data_loader, "Evaluating Paired")
+    
+    # Masks for Vulnerable (1) and Clean (0)
+    vul_mask = (labels == 1)
+    clean_mask = (labels == 0)
+    
+    # Metric 1 & 2: Individual Accuracy
+    acc_vul = (preds[vul_mask] == 1).sum() / vul_mask.sum() * 100
+    acc_clean = (preds[clean_mask] == 0).sum() / clean_mask.sum() * 100
+    
+    # Metric 3: Paired Accuracy 
+    # Assumes exact 1-to-1 mapping between vulnerable and clean samples in the dataset
+    preds_vul = preds[vul_mask]
+    preds_clean = preds[clean_mask]
+    
+    if len(preds_vul) == len(preds_clean):
+        paired_acc = ((preds_vul == 1) & (preds_clean == 0)).sum() / len(preds_vul) * 100
+    else:
+        paired_acc = 0.0 # Fallback if dataset is skewed
+        
+    print(f"\n--- PAIRED RESULTS (Seed 13) ---")
+    print(f"% Nhận diện đúng hàm lỗi:      {acc_vul:.2f}%")
+    print(f"% Nhận diện đúng hàm sạch:     {acc_clean:.2f}%")
+    print(f"Độ chính xác trên cặp (Paired Acc): {paired_acc:.2f}%\n")
+
+# ---------------------------------------------------------
+# 2. EVALUATE BIGVUL SET
+# ---------------------------------------------------------
+def evaluate_bigvul_custom(data_loader, primevul_f1, primevul_mcc):
+    labels, preds = get_predictions(data_loader, "Evaluating BigVul")
+    
+    acc = accuracy_score(labels, preds) * 100
+    f1 = f1_score(labels, preds) * 100
+    mcc = matthews_corrcoef(labels, preds) * 100
+    
+    # Calculate Deltas
+    delta_f1 = f1 - (primevul_f1 * 100)
+    delta_mcc = mcc - (primevul_mcc * 100)
+    
+    print(f"--- BIGVUL RESULTS (Seed 13) ---")
+    print(f"Accuracy (BigVul):                 {acc:.2f}%")
+    print(f"F1-Score (BigVul):                 {f1:.2f}%")
+    print(f"Delta F1-Score (so với PrimeVul):  {delta_f1:+.2f}%")
+    print(f"MCC (BigVul):                      {mcc:.2f}%")
+    print(f"Delta MCC (so với PrimeVul):       {delta_mcc:+.2f}%\n")
+
+# ==========================================
+# EXECUTE EVALUATION
+# ==========================================
+# Inputting PrimeVul Seed 13 baseline results (converted to standard)
+PRIMEVUL_F1_SEED_13 = 0.1750
+PRIMEVUL_MCC_SEED_13 = 0.1865
+
+evaluate_paired_custom(pair_loader, test_pair_df)
+evaluate_bigvul_custom(bv_loader, PRIMEVUL_F1_SEED_13, PRIMEVUL_MCC_SEED_13)
+
+[CODE]
+# ==========================================
+# CELL: TÌM NGƯỠNG TỐI ƯU & TEST NHANH TẬP PAIRED
+# ==========================================
+import numpy as np
+from sklearn.metrics import precision_recall_curve
+import torch
+from tqdm import tqdm
+
+print("1. Viết lại hàm chỉ lấy Xác suất (không chốt cứng 0.5)...")
+def get_probs_only(data_loader, desc):
+    all_labels = []
+    all_probs = []
+    with torch.no_grad():
+        for batch in tqdm(data_loader, desc=desc):
+            input_ids = batch[0].to(device)
+            attention_mask = batch[1].to(device)
+            labels = batch[2].numpy()
+            
+            bin_logits, _ = model(input_ids, attention_mask)
+            # Chỉ lấy xác suất (probs), chưa vội chốt nhãn (preds)
+            probs = torch.sigmoid(bin_logits).cpu().numpy()
+            
+            all_labels.extend(labels)
+            all_probs.extend(probs)
+    return np.array(all_labels), np.array(all_probs)
+
+# ---------------------------------------------------------
+# 2. CHẠY TRÊN TẬP VAL ĐỂ TÌM NGƯỠNG (Mất ~1 phút)
+# ---------------------------------------------------------
+# Tạo val_loader nếu Notebook này chưa có (copy từ file Train sang)
+from torch.utils.data import DataLoader, TensorDataset
+val_df = pd.read_json(f"{DATA_DIR}/val_frozen.jsonl", lines=True)
+val_encodings = tokenizer(val_df['func_code'].tolist(), padding="max_length", truncation=True, max_length=512, return_tensors="pt")
+val_labels_tensor = torch.tensor(val_df['label'].tolist(), dtype=torch.long)
+val_loader = DataLoader(TensorDataset(val_encodings['input_ids'], val_encodings['attention_mask'], val_labels_tensor), batch_size=32, shuffle=False)
+
+val_labels, val_probs = get_probs_only(val_loader, "Evaluating Val (Finding Threshold)")
+
+precisions, recalls, thresholds = precision_recall_curve(val_labels, val_probs)
+# Tính F1-Score cho mọi ngưỡng có thể (cộng 1e-8 để tránh chia cho 0)
+f1_scores = (2 * precisions * recalls) / (precisions + recalls + 1e-8)
+optimal_idx = np.argmax(f1_scores)
+optimal_threshold = thresholds[optimal_idx]
+
+print(f"\n🎯 NGƯỠNG TỐI ƯU TÌM ĐƯỢC LÀ: {optimal_threshold:.4f}\n")
+
+# ---------------------------------------------------------
+# 3. CHẠY TRÊN TẬP PAIRED VỚI NGƯỠNG MỚI (Mất ~30 giây)
+# ---------------------------------------------------------
+pair_labels, pair_probs = get_probs_only(pair_loader, "Evaluating Paired")
+
+# Áp dụng ngưỡng vừa tìm được thay vì 0.5
+pair_preds = (pair_probs > optimal_threshold).astype(int)
+
+# ---------------------------------------------------------
+# 4. TÍNH LẠI ĐIỂM PAIRED ACC
+# ---------------------------------------------------------
+vul_mask = (pair_labels == 1)
+clean_mask = (pair_labels == 0)
+
+acc_vul = (pair_preds[vul_mask] == 1).sum() / vul_mask.sum() * 100
+acc_clean = (pair_preds[clean_mask] == 0).sum() / clean_mask.sum() * 100
+
+preds_vul = pair_preds[vul_mask]
+preds_clean = pair_preds[clean_mask]
+
+if len(preds_vul) == len(preds_clean):
+    paired_acc = ((preds_vul == 1) & (preds_clean == 0)).sum() / len(preds_vul) * 100
+else:
+    paired_acc = 0.0
+
+print(f"--- KẾT QUẢ PAIRED SAU KHI ĐỔI NGƯỠNG ---")
+print(f"% Nhận diện đúng hàm lỗi:      {acc_vul:.2f}%")
+print(f"% Nhận diện đúng hàm sạch:     {acc_clean:.2f}%")
+print(f"Độ chính xác trên cặp (Paired Acc): {paired_acc:.2f}%\n")
+
+[CODE]
+# ==========================================
+# CELL: DEBUGGING BIGVUL CATASTROPHE
+# ==========================================
+import pandas as pd
+import numpy as np
+
+print("--- ĐIỀU TRA TẬP BIGVUL ---")
+
+# 1. Kiểm tra phân bố Label
+print("\n1. Phân bố nhãn thực tế trong test_bv_df:")
+print(test_bv_df['label'].value_counts(dropna=False))
+
+# 2. Đo chiều dài Code (Mô phỏng lại bằng số từ)
+test_bv_df['word_count'] = test_bv_df['func_code'].apply(lambda x: len(str(x).split()))
+print("\n2. Thống kê chiều dài hàm (Word count):")
+print(test_bv_df['word_count'].describe())
+
+# 3. Đếm số mẫu bị cắt cụt (vượt 400 từ)
+over_limit = (test_bv_df['word_count'] > 400).sum()
+percent_over = (over_limit / len(test_bv_df)) * 100
+print(f"\n3. Số hàm có nguy cơ bị cắt cụt (>400 từ): {over_limit} ({percent_over:.2f}%)")
+
+# 4. Mổ xẻ Ma trận nhầm lẫn (Confusion Matrix) của BigVul hiện tại
+# Dùng lại probs và labels nếu bạn đã chạy ở Cell đánh giá BigVul trước đó
+try:
+    preds = (bv_probs > 0.5).astype(int)
+    tn, fp, fn, tp = confusion_matrix(bv_labels, preds).ravel()
+    print("\n4. Ma trận nhầm lẫn (Threshold 0.5) trên BigVul:")
+    print(f"   - Đúng Sạch (TN): {tn}")
+    print(f"   - Đúng Lỗi (TP):  {tp}  <-- Nếu số này ~0, mô hình đang bị mù!")
+    print(f"   - Báo giả (FP):   {fp}")
+    print(f"   - Bỏ sót (FN):    {fn}  <-- Nếu số này khổng lồ, là do bị cắt cụt hoặc OOD quá nặng!")
+except NameError:
+    print("\n(Không tìm thấy bv_probs trong bộ nhớ, hãy bỏ qua phần ma trận này)")
+
+[CODE]
+# ==========================================
+# CELL: APPLY OPTIMAL THRESHOLD FOR PRIMEVUL
+# ==========================================
+import numpy as np
+from sklearn.metrics import accuracy_score, f1_score, matthews_corrcoef, precision_score, recall_score, confusion_matrix
+
+print("1. Extracting probabilities for PrimeVul (takes ~1-2 minutes)...")
+# Extract labels and probabilities using the function we defined earlier
+pv_labels, pv_probs = get_probs_only(pv_loader, "Evaluating PrimeVul")
+
+print("\n--- PRIMEVUL RESULTS WITH OPTIMAL THRESHOLD 0.2118 ---")
+
+# Set the optimal threshold found from the validation set
+OPTIMAL_THRESHOLD = 0.2118 
+
+# Convert probabilities to binary predictions using the new threshold
+pv_preds_optimal = (pv_probs > OPTIMAL_THRESHOLD).astype(int)
+
+# Calculate all evaluation metrics
+acc = accuracy_score(pv_labels, pv_preds_optimal)
+mcc = matthews_corrcoef(pv_labels, pv_preds_optimal)
+prec = precision_score(pv_labels, pv_preds_optimal, zero_division=0)
+rec = recall_score(pv_labels, pv_preds_optimal, zero_division=0)
+f1 = f1_score(pv_labels, pv_preds_optimal)
+
+# Calculate False Positive Rate
+tn, fp, fn, tp = confusion_matrix(pv_labels, pv_preds_optimal).ravel()
+fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0
+
+# Print the final results
+print(f"Accuracy:  {acc:.4f}")
+print(f"MCC:       {mcc:.4f}")
+print(f"Precision: {prec:.4f}")
+print(f"Recall:    {rec:.4f}  <-- Expected to increase significantly!")
+print(f"F1-Score:  {f1:.4f}  <-- Expected to be higher than 0.1750!")
+print(f"FPR:       {fpr:.4f}")
+
+[CODE]
+

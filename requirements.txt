@@ -1,0 +1,10 @@
+torch
+transformers
+datasketch
+pandas
+numpy
+scikit-learn
+sentence-transformers
+matplotlib
+ipykernel
+jupyter

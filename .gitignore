@@ -1,0 +1,33 @@
+# ==========================================
+# LOCAL WORKSPACE DIRECTORIES
+# ==========================================
+# Ignore local documentation and experiment scripts
+docs/
+
+# Ignore Kaggle draft notebooks and exploratory data analysis
+kaggle_notebooks/
+
+# ==========================================
+# DATA & OUTPUT DIRECTORIES
+# ==========================================
+# Never commit raw or processed data
+data/
+
+# Ignore model predictions, evaluation metrics, and logs
+predictions/
+metrics/
+checkpoints/
+
+# ==========================================
+# PYTHON ENVIRONMENTS & CACHE
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+venv/
+env/
+.venv/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/

@@ -5,9 +5,11 @@ python_files = {
     "src/models/e1_0_baseline.py": "kaggle_notebooks/x-locvul-e1-0.ipynb",
     "src/models/e1_1_codebert.py": "kaggle_notebooks/x-locvul-e1-1.ipynb",
     "src/models/e1_2_unixcoder.py": "kaggle_notebooks/x-locvul-e1-2.ipynb",
+    "src/models/e1_3_unix_multi.py": "kaggle_notebooks/x-locvul-e1-3.ipynb",
     "src/models/e1_4_hard_mining.py": "kaggle_notebooks/x-locvul-e1-4.ipynb",
     "src/models/e1_5_shuffled_cwe.py": "kaggle_notebooks/x-locvul-e1-5.ipynb",
-    "src/models/e1_6_hierarchical_cwe.py": "kaggle_notebooks/x-locvul-e1-6.ipynb"
+    "src/models/e1_6_hierarchical_cwe.py": "kaggle_notebooks/x-locvul-e1-6.ipynb",
+    "src/models/evaluate_e1.py": "kaggle_notebooks/x-locvul-evaluate.ipynb"
 }
 
 os.makedirs("kaggle_notebooks", exist_ok=True)
@@ -29,11 +31,16 @@ def create_notebook(py_path, ipynb_path, output_num):
             code_lines[i] = line.replace('DATA_DIR', 'FROZEN_DIR')
         elif line.startswith('OUTPUT_DIR = "./saved_models_'):
             code_lines[i] = f'OUTPUT_DIR = {KAGGLE_OUTPUT_DIR_PREFIX}{output_num}"\n'
+        # Fix paths inside evaluate_e1.py
+        elif line.strip().startswith('"checkpoint": "./saved_models_e1_'):
+            code_lines[i] = line.replace('"checkpoint": "./saved_models_e1_', f'"checkpoint": "/kaggle/working/saved_models_e1_')
     
     # Prepend pip installs for NN models as the first cell
     install_cell = []
-    if output_num in ["1", "2", "4", "5", "6"]:
+    if output_num in ["1", "2", "3", "4", "5", "6"]:
         install_cell = ["!pip install transformers datasets scikit-learn -q\n"]
+    elif output_num == "eval":
+        install_cell = ["!pip install transformers datasets scikit-learn statsmodels -q\n"]
     else:
         install_cell = ["!pip install scikit-learn -q\n"]
 
@@ -104,7 +111,10 @@ for py_path, ipynb_path in python_files.items():
     # Extract the number from the filename to pass as output_num
     # e.g., src/models/e1_0_baseline.py -> output_num = "0"
     base = os.path.basename(py_path)
-    num = base.split('_')[1]
+    if "evaluate" in base:
+        num = "eval"
+    else:
+        num = base.split('_')[1]
     create_notebook(py_path, ipynb_path, num)
 
 print("Notebooks created successfully!")

@@ -16,7 +16,9 @@ python_files = {
     "src/stage2_localization/evaluate_e2.py": "kaggle_notebooks/x-locvul-evaluate-e2.ipynb",
     "src/stage3_explanation/sample_e3_cases.py": "kaggle_notebooks/x-locvul-e3-sample.ipynb",
     "src/stage3_explanation/e3_qwen_explainer.py": "kaggle_notebooks/x-locvul-e3-qwen.ipynb",
-    "src/stage3_explanation/prepare_human_eval.py": "kaggle_notebooks/x-locvul-e3-prepare.ipynb"
+    "src/stage3_explanation/prepare_human_eval.py": "kaggle_notebooks/x-locvul-e3-prepare.ipynb",
+    "src/stage4_end_to_end/evaluate_e4_funnel.py": "kaggle_notebooks/x-locvul-e4-funnel.ipynb",
+    "src/stage4_end_to_end/e4_performance_profiler.py": "kaggle_notebooks/x-locvul-e4-performance.ipynb"
 }
 
 os.makedirs("kaggle_notebooks", exist_ok=True)

@@ -109,6 +109,20 @@ class MultiTaskTrainer(Trainer):
         total_loss = loss_bin + LAMBDA_CWE * loss_cwe
         return (total_loss, outputs) if return_outputs else total_loss
 
+def expected_calibration_error(y_true, y_prob, n_bins=10):
+    bin_boundaries = np.linspace(0, 1, n_bins + 1)
+    bin_lowers = bin_boundaries[:-1]
+    bin_uppers = bin_boundaries[1:]
+    ece = 0.0
+    for bin_lower, bin_upper in zip(bin_lowers, bin_uppers):
+        in_bin = (y_prob > bin_lower) & (y_prob <= bin_upper)
+        prop_in_bin = in_bin.mean()
+        if prop_in_bin > 0:
+            accuracy_in_bin = y_true[in_bin].mean()
+            avg_confidence_in_bin = y_prob[in_bin].mean()
+            ece += np.abs(avg_confidence_in_bin - accuracy_in_bin) * prop_in_bin
+    return ece
+
 def compute_metrics(eval_pred):
     logits, labels = eval_pred.predictions, eval_pred.label_ids
     if isinstance(logits, tuple):
@@ -131,7 +145,24 @@ def compute_metrics(eval_pred):
     tn, fp, fn, tp = confusion_matrix(labels, preds).ravel()
     fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0
     
-    return {"accuracy": accuracy, "mcc": mcc, "precision": precision, "recall": recall, "f1": f1, "fpr": fpr, "pr_auc": pr_auc}
+    from sklearn.metrics import roc_auc_score, brier_score_loss
+    roc_auc = roc_auc_score(labels, probs)
+    brier = brier_score_loss(labels, probs)
+    ece = expected_calibration_error(labels, probs)
+    
+    return {
+        "accuracy": accuracy,
+        "mcc": mcc,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "fpr": fpr,
+        "pr_auc": pr_auc,
+        "roc_auc": roc_auc,
+        "brier": brier,
+        "ece": ece
+    }
+
 
 def run_stage_1_and_2(seed):
     print(f"\n======================================")

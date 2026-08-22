@@ -1,0 +1,5 @@
+Review_ID,original_idx,ablation_name
+REV_0000,0,A3_FunctionLineCWE
+REV_0001,0,A2_FunctionLine
+REV_0002,0,A4_Oracle
+REV_0003,0,A1_FunctionOnly

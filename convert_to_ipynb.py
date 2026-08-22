@@ -13,7 +13,10 @@ python_files = {
     "src/stage2_localization/e2_1_linevul.py": "kaggle_notebooks/x-locvul-e2-1.ipynb",
     "src/stage2_localization/e2_2_codet5_vanilla.py": "kaggle_notebooks/x-locvul-e2-2.ipynb",
     "src/stage2_localization/e2_4_codet5_cwe_conditioned.py": "kaggle_notebooks/x-locvul-e2-4.ipynb",
-    "src/stage2_localization/evaluate_e2.py": "kaggle_notebooks/x-locvul-evaluate-e2.ipynb"
+    "src/stage2_localization/evaluate_e2.py": "kaggle_notebooks/x-locvul-evaluate-e2.ipynb",
+    "src/stage3_explanation/sample_e3_cases.py": "kaggle_notebooks/x-locvul-e3-sample.ipynb",
+    "src/stage3_explanation/e3_qwen_explainer.py": "kaggle_notebooks/x-locvul-e3-qwen.ipynb",
+    "src/stage3_explanation/prepare_human_eval.py": "kaggle_notebooks/x-locvul-e3-prepare.ipynb"
 }
 
 os.makedirs("kaggle_notebooks", exist_ok=True)

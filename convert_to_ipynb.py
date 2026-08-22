@@ -9,7 +9,11 @@ python_files = {
     "src/models/e1_4_hard_mining.py": "kaggle_notebooks/x-locvul-e1-4.ipynb",
     "src/models/e1_5_shuffled_cwe.py": "kaggle_notebooks/x-locvul-e1-5.ipynb",
     "src/models/e1_6_hierarchical_cwe.py": "kaggle_notebooks/x-locvul-e1-6.ipynb",
-    "src/models/evaluate_e1.py": "kaggle_notebooks/x-locvul-evaluate.ipynb"
+    "src/stage1_detection/evaluate_e1.py": "kaggle_notebooks/x-locvul-evaluate-e1.ipynb",
+    "src/stage2_localization/e2_1_linevul.py": "kaggle_notebooks/x-locvul-e2-1.ipynb",
+    "src/stage2_localization/e2_2_codet5_vanilla.py": "kaggle_notebooks/x-locvul-e2-2.ipynb",
+    "src/stage2_localization/e2_4_codet5_cwe_conditioned.py": "kaggle_notebooks/x-locvul-e2-4.ipynb",
+    "src/stage2_localization/evaluate_e2.py": "kaggle_notebooks/x-locvul-evaluate-e2.ipynb"
 }
 
 os.makedirs("kaggle_notebooks", exist_ok=True)
@@ -30,7 +34,9 @@ def create_notebook(py_path, ipynb_path, output_num):
         elif 'DATA_DIR' in line:
             code_lines[i] = line.replace('DATA_DIR', 'FROZEN_DIR')
         elif line.startswith('OUTPUT_DIR = "./saved_models_'):
-            code_lines[i] = f'OUTPUT_DIR = {KAGGLE_OUTPUT_DIR_PREFIX}{output_num}"\n'
+            # It could be e1_ or e2_
+            prefix_match = "e1" if "e1" in line else "e2"
+            code_lines[i] = f'OUTPUT_DIR = "/kaggle/working/saved_models_{prefix_match}_{output_num}"\n'
         # Fix paths inside evaluate_e1.py
         elif line.strip().startswith('"checkpoint": "./saved_models_e1_'):
             code_lines[i] = line.replace('"checkpoint": "./saved_models_e1_', f'"checkpoint": "/kaggle/working/saved_models_e1_')
@@ -42,7 +48,7 @@ def create_notebook(py_path, ipynb_path, output_num):
     elif output_num == "eval":
         install_cell = ["!pip install transformers datasets scikit-learn statsmodels -q\n"]
     else:
-        install_cell = ["!pip install scikit-learn -q\n"]
+        install_cell = ["!pip install scikit-learn transformers datasets -q\n"]
 
     cells = []
     if install_cell:

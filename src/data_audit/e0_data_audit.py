@@ -4,7 +4,7 @@ import hashlib
 import re
 import os
 
-DATA_PATH = "./data/processed"
+DATA_PATH = "./data/processed" # NO CHANGE HERE PLEASE!
 OUTPUT_DIR = "./data/manifests"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 

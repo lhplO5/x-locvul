@@ -216,12 +216,12 @@ Below are the key results reported in the manuscript, directly reproducible via 
 |:---|:---|:---|:---|:---|:---|:---|
 | E1.0a | Majority-clean | 98.13 | 0.000 | 0.00 | 0.000 | 0.00 |
 | E1.0b | Lexical-logistic | 82.49 | 0.129 | 10.15 | 0.089 | 16.96 |
-| E1.1 | CodeBERT, single-task BCE | 98.13 ± 0.01 | 0.071 ± 0.066 | 4.10 ± 4.29 | 0.085 ± 0.041 | 0.06 ± 0.06 |
-| E1.2 | UniXCoder, single-task BCE (λcwe = 0) | 98.12 ± 0.03 | 0.115 ± 0.061 | 7.33 ± 4.77 | 0.134 ± 0.003 | 0.11 ± 0.09 |
+| E1.1 | CodeBERT, single-task BCE | 98.13 ± 0.01 | 0.000 [0.000, 0.000] | 0.00 [0.00, 0.00] | 0.128 [0.099, 0.159] | 0.06 ± 0.06 |
+| E1.2 | UniXCoder, single-task BCE (λcwe = 0) | 98.12 ± 0.03 | 0.163 [0.107, 0.215] | 8.29 [4.88, 11.99] | 0.144 [0.114, 0.180] | 0.11 ± 0.09 |
 | E1.3 | UniXCoder, multi-task, true CWE labels | 98.13 ± 0.01 | 0.145 [0.090, 0.196] | 7.73 [4.49, 11.21] | 0.146 [0.116, 0.181] | 0.11 ± 0.06 |
 | E1.5 | UniXCoder, multi-task, shuffled CWE (negative control) | 98.14 ± 0.01 | 0.154 [0.098, 0.209] | 8.20 [4.71, 11.91] | 0.147 [0.116, 0.183] | 0.09 ± 0.02 |
-| E1.6 | UniXCoder, multi-task, hierarchical (parent) CWE | 98.15 ± 0.00 | 0.075 ± 0.065 | 3.84 ± 3.75 | 0.110 ± 0.040 | 0.04 ± 0.04 |
-| E1.4 | UniXCoder, multi-task + hard-example mining | 97.10 ± 0.96 | 0.129 ± 0.030 | 13.37 ± 3.23 | 0.103 ± 0.007 | 1.31 ± 1.12 |
+| E1.6 | UniXCoder, multi-task, hierarchical (parent) CWE | 98.15 ± 0.00 | 0.054 [-0.001, 0.108] | 0.99 [0.00, 2.48] | 0.143 [0.114, 0.179] | 0.04 ± 0.04 |
+| E1.4 | UniXCoder, multi-task + hard-example mining | 97.10 ± 0.96 | 0.157 [0.116, 0.203] | 15.35 [11.42, 19.68] | 0.113 [0.091, 0.139] | 1.31 ± 1.12 |
 
 <br>
 

@@ -1,0 +1,9 @@
+Run,Encoder/loss/sampling,Mục đích,Paired Accuracy,McNemar p-val vs E1.1,Holm Corrected vs E1.1,McNemar p-val vs E1.2,Holm Corrected vs E1.2
+E1.0a,Majority-clean,Sanity floor,0.0000,N/A,N/A,N/A,N/A
+E1.0b,Lexical-logistic,Sanity floor,0.4966,N/A,N/A,N/A,N/A
+E1.1,CodeBERT + BCE Loss,Huggingface Baseline,0.5,,,0.62763,1.0
+E1.2,UniXCoder + BCE Loss,Encoder Baseline,0.5034,0.62763,1.0,,
+E1.3,UniXCoder + Multi-task (Bin+CWE),Proposed Methodology,0.4989,1.0,1.0,0.38648,1.0
+E1.4,UniXCoder + Hard-Mining,Ablation: Data Sampling,0.4966,0.77943,1.0,0.4292,1.0
+E1.5,UniXCoder + Shuffled CWE,Negative Control,0.4977,0.83826,1.0,0.26726,1.0
+E1.6,UniXCoder + Hierarchical CWE,Ablation: Granularity,0.5011,1.0,1.0,0.80259,1.0

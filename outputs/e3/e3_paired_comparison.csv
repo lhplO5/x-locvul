@@ -1,0 +1,5 @@
+Comparison,Diff Mean,95% CI
+Semantic vs Fuzzy (Top-1),-0.0159,"[-0.0294, -0.0023]"
+Semantic vs Fuzzy (MRR),-0.0134,"[-0.0254, -0.0016]"
+Fuzzy vs Raw (Top-1),0.0073,"[-0.0076, 0.0231]"
+Fuzzy vs Raw (MRR),0.0147,"[-0.0003, 0.0303]"

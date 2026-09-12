@@ -1,0 +1,6 @@
+Metric,Weight_Type,Cohen_Kappa
+Score_RootCause_1_5,(quadratic weights),0.9186188455501947
+Score_Evidence_1_5,(quadratic weights),0.877294777894036
+Score_CWE_1_5,(quadratic weights),0.900961357853935
+Score_Repair_1_5,(quadratic weights),0.7808244730460735
+Score_UnsupportedClaim_0_1,(unweighted),0.44551591128254575

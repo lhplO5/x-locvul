@@ -1,0 +1,10 @@
+Comparison,Metric,Mean_Diff,P_Value
+A3_FunctionLineCWE vs A2_FunctionLine,Score_RootCause_1_5,0.06,0.6425190151026667
+A3_FunctionLineCWE vs A2_FunctionLine,Score_Evidence_1_5,0.09,0.6227134974211699
+A3_FunctionLineCWE vs A2_FunctionLine,Score_CWE_1_5,-0.32,0.12782870715259684
+A2_FunctionLine vs A4_Oracle,Score_RootCause_1_5,-0.52,0.020865494668574125
+A2_FunctionLine vs A4_Oracle,Score_Evidence_1_5,-1.01,0.0003295176524125151
+A2_FunctionLine vs A4_Oracle,Score_CWE_1_5,-1.98,2.3284798126489546e-08
+A3_FunctionLineCWE vs A4_Oracle,Score_RootCause_1_5,-0.46,0.019933620743381394
+A3_FunctionLineCWE vs A4_Oracle,Score_Evidence_1_5,-0.92,0.00031890929717538936
+A3_FunctionLineCWE vs A4_Oracle,Score_CWE_1_5,-2.3,9.425402430431102e-10

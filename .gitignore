@@ -31,3 +31,23 @@ env/
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
+
+# ==========================================
+# EXCLUDED PROJECT FOLDERS & TEMP FILES
+# ==========================================
+all_checkpoints/
+all_checkpoints_extracted/
+annotations/
+configs/
+draft/
+drafts/
+e5_e6_data/
+image/
+prompts/
+results_e3/
+saved_models/
+saved_models_e1_1/
+saved_models_e1_4/
+saved_models_e2_ablation/
+tmp/
+fix_readme.py

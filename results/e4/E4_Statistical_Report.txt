@@ -1,0 +1,40 @@
+
+--- Inter-Rater Reliability ---
+Score_RootCause_1_5 (quadratic weights): 0.919
+Score_Evidence_1_5 (quadratic weights): 0.877
+Score_CWE_1_5 (quadratic weights): 0.901
+Score_Repair_1_5 (quadratic weights): 0.781
+Score_UnsupportedClaim_0_1 (unweighted): 0.446
+
+--- Mean Scores per Condition ---
+                    Score_RootCause_1_5_avg  ...  Score_UnsupportedClaim_0_1_avg
+Condition                                    ...                                
+A1_FunctionOnly                        1.40  ...                            0.90
+A2_FunctionLine                        1.34  ...                            0.90
+A3_FunctionLineCWE                     1.40  ...                            0.86
+A4_Oracle                              1.86  ...                            0.87
+
+[4 rows x 5 columns]
+
+--- Specific Comparisons ---
+
+1. line+CWE (A3) so với line-only (A2)
+
+--- Statistical Test: A3_FunctionLineCWE vs A2_FunctionLine ---
+Score_RootCause_1_5: diff = +0.060, p-value = 0.6425
+Score_Evidence_1_5: diff = +0.090, p-value = 0.6227
+Score_CWE_1_5: diff = -0.320, p-value = 0.1278
+
+2. Predicted evidence (A2) so với Oracle evidence (A4)
+
+--- Statistical Test: A2_FunctionLine vs A4_Oracle ---
+Score_RootCause_1_5: diff = -0.520, p-value = 0.0209
+Score_Evidence_1_5: diff = -1.010, p-value = 0.0003
+Score_CWE_1_5: diff = -1.980, p-value = 0.0000
+
+3. Predicted evidence (A3) so với Oracle evidence (A4)
+
+--- Statistical Test: A3_FunctionLineCWE vs A4_Oracle ---
+Score_RootCause_1_5: diff = -0.460, p-value = 0.0199
+Score_Evidence_1_5: diff = -0.920, p-value = 0.0003
+Score_CWE_1_5: diff = -2.300, p-value = 0.0000

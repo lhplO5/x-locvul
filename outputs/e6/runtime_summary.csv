@@ -1,0 +1,10 @@
+Metrics,Stage 1,Stage 2,Stage 3
+Model Base,UniXCoder,CodeT5,Qwen2.5 Coder 1.5B
+Median Latency (ms),2.65,282.84,502.92
+Throughput (func/s),377.89,3.54,1.99
+Peak GPU VRAM (MB),490.27,914.05,2965.05
+,,,
+"System received 200 input functions (100 safe, 100 vulnerable)",,,
+"Stage 1 successfully filtered out 95 safe functions (95.0% filter ratio)",,,
+"Only 105 functions proceed to Stage 2 and Stage 3",,,
+"--> Saved: End-to-end Average Latency reduced to 415.17ms/function",,,

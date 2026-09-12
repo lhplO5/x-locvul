@@ -209,3 +209,48 @@ As stipulated in our artifact design and Section 6.3 (Threats to Validity) of th
 Below are the key results reported in the manuscript, directly reproducible via the pre-generated data tables in this repository
 
 <div align="center">
+
+<h3><b>Table 1: Controlled RQ1 comparison on the leakage-controlled PrimeVul-derived test set.</b></h3>
+
+| Run | Configuration | Accuracy (%) | MCC | Vul. F1 (%) | PR-AUC | FPR (%) |
+|:---|:---|:---|:---|:---|:---|:---|
+| E1.0a | Majority-clean | 98.13 | 0.000 | 0.00 | 0.000 | 0.00 |
+| E1.0b | Lexical-logistic | 82.49 | 0.129 | 10.15 | 0.089 | 16.96 |
+| E1.1 | CodeBERT, single-task BCE | 98.13 ± 0.01 | 0.071 ± 0.066 | 4.10 ± 4.29 | 0.085 ± 0.041 | 0.06 ± 0.06 |
+| E1.2 | UniXCoder, single-task BCE (λcwe = 0) | 98.12 ± 0.03 | 0.115 ± 0.061 | 7.33 ± 4.77 | 0.134 ± 0.003 | 0.11 ± 0.09 |
+| E1.3 | UniXCoder, multi-task, true CWE labels | 98.13 ± 0.01 | 0.145 [0.090, 0.196] | 7.73 [4.49, 11.21] | 0.146 [0.116, 0.181] | 0.11 ± 0.06 |
+| E1.5 | UniXCoder, multi-task, shuffled CWE (negative control) | 98.14 ± 0.01 | 0.154 [0.098, 0.209] | 8.20 [4.71, 11.91] | 0.147 [0.116, 0.183] | 0.09 ± 0.02 |
+| E1.6 | UniXCoder, multi-task, hierarchical (parent) CWE | 98.15 ± 0.00 | 0.075 ± 0.065 | 3.84 ± 3.75 | 0.110 ± 0.040 | 0.04 ± 0.04 |
+| E1.4 | UniXCoder, multi-task + hard-example mining | 97.10 ± 0.96 | 0.129 ± 0.030 | 13.37 ± 3.23 | 0.103 ± 0.007 | 1.31 ± 1.12 |
+
+<br>
+
+<h3><b>Table 2: Chronological/de-duplicated evaluation at the fixed validation threshold.</b></h3>
+
+| Accuracy (%) | MCC | Precision (%) | Recall (%) | F1 (%) | PR-AUC | ROC-AUC |
+|:---|:---|:---|:---|:---|:---|:---|
+| 96.55 | −0.002 | 0.00 | 0.00 | 0.00 | 0.110 | 0.782 |
+
+<br>
+
+<h3><b>Table 3: Competing source-projection mechanisms in E3.</b></h3>
+
+| Strategy | Top-1 (%) | Top-5 (%) | Top-10 (%) | MRR (%) |
+|:---|:---|:---|:---|:---|
+| Raw generation | 83.06 | 83.31 | 83.51 | 83.18 |
+| Normalized exact match | 41.60 | 41.73 | 41.73 | 41.66 |
+| Fuzzy projection | 83.79 | 85.80 | 85.83 | 84.65 |
+| Semantic projection | 82.21 | 84.90 | 84.93 | 83.31 |
+
+<br>
+
+<h3><b>Table 4: Two-rater E4 results over 50 paired cases.</b></h3>
+
+| Condition | Root cause | Evidence | CWE | Repair | Unsupported claim |
+|:---|:---|:---|:---|:---|:---|
+| Function only | 1.40 | 2.27 | 1.40 | 1.33 | 0.90 |
+| Function + line | 1.34 | 3.42 | 1.72 | 1.33 | 0.90 |
+| Function + line + CWE | 1.40 | 3.51 | 1.40 | 1.27 | 0.86 |
+| Oracle evidence | 1.86 | 4.43 | 3.70 | 1.59 | 0.87 |
+
+</div>

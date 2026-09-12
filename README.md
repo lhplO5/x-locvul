@@ -212,35 +212,35 @@ Below are the key results reported in the manuscript, directly reproducible via 
 
 <h3><b>Table 1: Controlled RQ1 comparison on the leakage-controlled PrimeVul-derived test set.</b></h3>
 
-| Run | Configuration | Accuracy (%) | MCC | Vul. F1 (%) | PR-AUC | FPR (%) |
+| Run | Configuration | Accuracy | MCC | Vul. F1 | PR-AUC | FPR |
 |:---|:---|:---|:---|:---|:---|:---|
-| E1.0a | Majority-clean | 98.13 | 0.000 | 0.00 | 0.000 | 0.00 |
-| E1.0b | Lexical-logistic | 82.49 | 0.129 | 10.15 | 0.089 | 16.96 |
-| E1.1 | CodeBERT, single-task BCE | 98.13 ± 0.01 | 0.000 [0.000, 0.000] | 0.00 [0.00, 0.00] | 0.128 [0.099, 0.159] | 0.06 ± 0.06 |
-| E1.2 | UniXCoder, single-task BCE (λcwe = 0) | 98.12 ± 0.03 | 0.163 [0.107, 0.215] | 8.29 [4.88, 11.99] | 0.144 [0.114, 0.180] | 0.11 ± 0.09 |
-| E1.3 | UniXCoder, multi-task, true CWE labels | 98.13 ± 0.01 | 0.145 [0.090, 0.196] | 7.73 [4.49, 11.21] | 0.146 [0.116, 0.181] | 0.11 ± 0.06 |
-| E1.5 | UniXCoder, multi-task, shuffled CWE (negative control) | 98.14 ± 0.01 | 0.154 [0.098, 0.209] | 8.20 [4.71, 11.91] | 0.147 [0.116, 0.183] | 0.09 ± 0.02 |
-| E1.6 | UniXCoder, multi-task, hierarchical (parent) CWE | 98.15 ± 0.00 | 0.054 [-0.001, 0.108] | 0.99 [0.00, 2.48] | 0.143 [0.114, 0.179] | 0.04 ± 0.04 |
-| E1.4 | UniXCoder, multi-task + hard-example mining | 97.10 ± 0.96 | 0.157 [0.116, 0.203] | 15.35 [11.42, 19.68] | 0.113 [0.091, 0.139] | 1.31 ± 1.12 |
+| E1.0a | Majority-clean | 0.9813 | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+| E1.0b | Lexical-logistic | 0.8249 | 0.1287 | 0.1015 | 0.0893 | 0.1696 |
+| E1.1 | CodeBERT, single-task BCE | 0.9813 ± 0.0001 | 0.0000 [0.0000, 0.0000] | 0.0000 [0.0000, 0.0000] | 0.1276 [0.0994, 0.1594] | 0.0006 ± 0.0006 |
+| E1.2 | UniXCoder, single-task BCE (λcwe = 0) | 0.9812 ± 0.0003 | 0.1625 [0.1068, 0.2152] | 0.0829 [0.0488, 0.1199] | 0.1441 [0.1135, 0.1801] | 0.0011 ± 0.0009 |
+| E1.3 | UniXCoder, multi-task, true CWE labels | 0.9813 ± 0.0001 | 0.1445 [0.0904, 0.1955] | 0.0773 [0.0449, 0.1121] | 0.1464 [0.1157, 0.1814] | 0.0011 ± 0.0006 |
+| E1.5 | UniXCoder, multi-task, shuffled CWE (negative control) | 0.9814 ± 0.0001 | 0.1535 [0.0976, 0.2085] | 0.0820 [0.0471, 0.1191] | 0.1467 [0.1160, 0.1828] | 0.0009 ± 0.0002 |
+| E1.6 | UniXCoder, multi-task, hierarchical (parent) CWE | 0.9815 ± 0.0000 | 0.0540 [-0.0013, 0.1078] | 0.0099 [0.0000, 0.0248] | 0.1427 [0.1140, 0.1785] | 0.0004 ± 0.0004 |
+| E1.4 | UniXCoder, multi-task + hard-example mining | 0.9710 ± 0.0096 | 0.1569 [0.1160, 0.2031] | 0.1535 [0.1142, 0.1968] | 0.1128 [0.0912, 0.1392] | 0.0131 ± 0.0112 |
 
 <br>
 
 <h3><b>Table 2: Chronological/de-duplicated evaluation at the fixed validation threshold.</b></h3>
 
-| Accuracy (%) | MCC | Precision (%) | Recall (%) | F1 (%) | PR-AUC | ROC-AUC |
+| Accuracy | MCC | Precision | Recall | F1 | PR-AUC | ROC-AUC |
 |:---|:---|:---|:---|:---|:---|:---|
-| 96.55 | −0.002 | 0.00 | 0.00 | 0.00 | 0.110 | 0.782 |
+| 0.9655 | −0.0018 | 0.0000 | 0.0000 | 0.0000 | 0.1097 | 0.7821 |
 
 <br>
 
 <h3><b>Table 3: Competing source-projection mechanisms in E3.</b></h3>
 
-| Strategy | Top-1 (%) | Top-5 (%) | Top-10 (%) | MRR (%) |
+| Strategy | Top-1 | Top-5 | Top-10 | MRR |
 |:---|:---|:---|:---|:---|
-| Raw generation | 83.06 | 83.31 | 83.51 | 83.18 |
-| Normalized exact match | 41.60 | 41.73 | 41.73 | 41.66 |
-| Fuzzy projection | 83.79 | 85.80 | 85.83 | 84.65 |
-| Semantic projection | 82.21 | 84.90 | 84.93 | 83.31 |
+| Raw generation | 0.8306 [0.8053, 0.8559] | 0.8331 [0.8081, 0.8584] | 0.8351 [0.8101, 0.8602] | 0.8318 [0.8069, 0.8570] |
+| Normalized exact match | 0.4160 [0.3817, 0.4470] | 0.4173 [0.3830, 0.4480] | 0.4173 [0.3830, 0.4480] | 0.4166 [0.3825, 0.4475] |
+| Fuzzy projection | 0.8379 [0.8127, 0.8630] | 0.8580 [0.8353, 0.8817] | 0.8583 [0.8353, 0.8820] | 0.8465 [0.8225, 0.8711] |
+| Semantic projection | 0.8221 [0.7957, 0.8487] | 0.8490 [0.8259, 0.8739] | 0.8493 [0.8264, 0.8741] | 0.8331 [0.8097, 0.8591] |
 
 <br>
 

@@ -225,8 +225,6 @@ As stipulated in our artifact design and Section 6.3 (Threats to Validity) of th
 
 ## Appendix: Experimental Results
 
-Below are the key results reported in the manuscript, directly reproducible via the pre-generated data tables in this repository
-
 ### **Table 1: Controlled RQ1 comparison on the leakage-controlled PrimeVul-derived test set.**
 
 | Run   | Configuration                                          | Accuracy (%)  | MCC (%)             | Vul. F1 (%)        | PR-AUC (%)           | FPR (%)      |

@@ -44,7 +44,7 @@ This repository contains the replication package for the **X-LocVul** paper. X-L
 
 ```text
 x-locvul/
-├── README.md       
+├── README.md     
 ├── Makefile                  # Automated commands for reproduction
 ├── environment/              # Environment requirements
 ├── src/                      # Source code (Python scripts)
@@ -87,13 +87,13 @@ Our evaluation builds upon three well-known vulnerability datasets: **PrimeVul**
 
 The X-LocVul pipeline cascades three specialized models:
 
-1. **Stage 1 (Detection)**: Initialized from `UniXCoder-base` (and `CodeBERT-base` as a baseline). Trained for multi-task vulnerability and CWE detection on an NVIDIA Tesla T4 with a learning rate of `2e-5` and batch size of 8.
-2. **Stage 2 (Localization)**: Utilizes `CodeT5-base` as a sequence-to-sequence generator for vulnerable statement projection. Trained with a learning rate of `5e-5` for 10 epochs using beam search (beam size 4).
-3. **Stage 3 (Explanation)**: Uses `Qwen2.5-Coder-1.5B-Instruct` as a lightweight explainer. We employ a temperature of `0.7` and a 512-token output budget to generate root-cause analyses and repair suggestions.
+1. **Stage 1 (Detection)**: Initialized from `UniXCoder-base` (and `CodeBERT-base` as a baseline). Trained for multi-task vulnerability and CWE detection on an NVIDIA RTX 5090.
+2. **Stage 2 (Localization)**: Utilizes `CodeT5-base` as a sequence-to-sequence generator for vulnerable statement projection.
+3. **Stage 3 (Explanation)**: Uses `Qwen2.5-Coder-1.5B-Instruct` as a lightweight explainer. 
 
 ## How to Replicate
 
-Because we do not provide pre-trained weights or cached prediction logs in this repository (due to size constraints), **evaluation scripts cannot be run in isolation**. You must either inspect the pre-generated results directly (Method 1) or run the full training pipeline before evaluating (Method 2).
+Because we do not provide pre-trained weights or cached prediction logs in this repository (due to size constraints), **evaluation scripts cannot be run in isolation**. You must either inspect the pre-generated results directly or run the full training pipeline before evaluating.
 
 ### 0. Prerequisites and Environment Setup
 
@@ -104,7 +104,7 @@ Because we do not provide pre-trained weights or cached prediction logs in this 
 **Step 1: Clone the repository**
 
 ```bash
-git clone https://github.com/Anon-Author/X-LocVul.git
+git clone https://github.com/lhplO5/x-locvul.git
 cd X-LocVul
 ```
 
@@ -118,7 +118,7 @@ pip install -r environment/requirements.txt
 
 ### 1. Direct Inspection of Results
 
-Because full reproduction requires days of GPU training, the fastest way to verify our claims is to inspect the pre-generated CSV tables located in the `outputs/` directory. We provide exhaustive tabular data covering all experimental stages:
+Because full reproduction requires days of training, the fastest way to verify our claims is to inspect the pre-generated CSV tables located in the `outputs/` directory. We provide exhaustive tabular data covering all experimental stages:
 
 #### E1: Stage-1 Detection
 
@@ -159,13 +159,13 @@ Because full reproduction requires days of GPU training, the fastest way to veri
 If you wish to rigorously reproduce the metrics computationally, you **must train the models from scratch first**, as weights and caches are not provided in this package.
 
 **Step 1: Data Preparation**
-Ensure you have downloaded the required dataset from Zenodo and placed the manifest files inside `data/manifests/`.
+Ensure you have downloaded the required dataset from Zenodo.
 
 **Step 2: Train the Models**
 To reproduce the training phase, execute the following commands sequentially for each experimental stage:
 
 ```bash
-make data-prep   # Prepares, audits, and formats raw datasets
+make data-prep   # In case you use the original dataset
 make train-e1    # Trains Stage 1 (Detection) models
 make train-e3    # Trains Stage 2 (Localization) models
 make train-e5    # Trains chronological diagnostic models
@@ -177,7 +177,7 @@ make train-e5    # Trains chronological diagnostic models
 
 > [!WARNING]
 > **Update Hardcoded Model Paths Before Evaluation**
-> The Python evaluation scripts (e.g., `src/e1/evaluate_e1.py`, `src/e4/run_full_pipeline.py`) contain hardcoded variables pointing to specific local checkpoint weights (such as `STAGE1_WEIGHTS = "./saved_models_e1_4/..."`).
+> The Python evaluation scripts (e.g., `src/e1/evaluate_e1.py`, `src/e4/run_full_pipeline.py`, ...) contain hardcoded variables pointing to specific local checkpoint weights (such as `STAGE1_WEIGHTS = "./saved_models_e1_4/..."`).
 > Because training models from scratch in Step 2 generates new weights in new timestamped/seed directories under `saved_models/`, **you MUST open the evaluation scripts and manually update these path variables** to point to your newly trained `.pt` files. If you skip this step, the scripts will fail to find the models or crash.
 
 **Only after the corresponding training steps have finished and paths are updated**, run the evaluation targets in the following order:
@@ -199,22 +199,13 @@ The E4 experiment involves human evaluation of LLM-generated explanations. It mu
 
 ```bash
 # Step 4a: Sample 150 vulnerable functions from LineVul test set
-make e4-sample         # → data/processed/e4_sample_150_linevul.jsonl
-
+make e4-sample    
 # Step 4b: Run the full 3-stage pipeline (Detection → Localization → Explanation)
-#          Requires GPU and trained model weights.
-make run-pipeline-e4   # → results/e4/full_pipeline_results.jsonl
-
+make run-pipeline-e4 
 # Step 4c: Generate blinded rating sheets for two human raters
-make e4-prep-human     # → results/e4/E4_RaterA.csv, E4_RaterB.csv, master_key.csv
-
-# ⚠️  PAUSE HERE: Two independent raters must manually score the generated
-#     rating sheets. Save the completed ratings to:
-#       outputs/e4/e4_rater_A.csv
-#       outputs/e4/e4_rater_B.csv
-
+make e4-prep-human  
 # Step 4d: Analyze the human ratings (IRR, means, Wilcoxon tests)
-make e4                # → outputs/e4/E4_IRR_Metrics.csv, E4_Wilcoxon_Tests.csv, etc.
+make e4
 ```
 
 Once finished, the tables in the `outputs/` directory will be overwritten with your newly reproduced data.

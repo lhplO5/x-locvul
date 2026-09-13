@@ -1,6 +1,6 @@
 # <a href="https://github.com/lhplO5/x-locvul">X-LocVul</a> Replication Package
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22732125.svg)](https://doi.org/10.5281/zenodo.xxxxxxx)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22732125.svg)](https://zenodo.org/records/22732125)
 
 <br />
 <p align="center">
@@ -40,19 +40,16 @@ This repository contains the replication package for the **X-LocVul** paper. X-L
   </ol>
 </details>
 
-
-
 ## Directory Structure
-
-To comply with GitHub storage constraints, large data and model weights are ignored via `.gitignore`. The core repository structure is:
 
 ```text
 x-locvul/
-├── README.md         
+├── README.md       
 ├── Makefile                  # Automated commands for reproduction
 ├── environment/              # Environment requirements
 ├── src/                      # Source code (Python scripts)
 │   ├── e1/                   # Stage 1: Detection scripts
+│   ├── e2/                   # Stage 1: Loss weight ablation scripts
 │   ├── e3/                   # Stage 2: Localization scripts
 │   ├── e4/                   # Stage 3: Explanation scripts
 │   ├── e5/                   # Chronological diagnostic scripts
@@ -61,38 +58,30 @@ x-locvul/
 └── outputs/                  # Final generated CSV tables for the manuscript
 ```
 
-
-
 ## Mapping to Manuscript Experiments
 
-Reviewers can trace conclusions from the paper directly to the exact data within minutes.
-
-| RQ / Claim                                | Manuscript Reference  | Evaluation Script (Reference)       | Pre-generated Output Table                    |
-| :---------------------------------------- | :-------------------- | :---------------------------------- | :-------------------------------------------- |
-| **RQ1**: Multi-task vs Single-task  | Section 5.1, Table 1 | `src/e1/compute_e1_metrics.py`    | `outputs/e1/primevul_seed_metrics.csv`      |
-| **RQ1**: Negative Control CI        | Section 5.1           | `src/e1/e1_bootstrap_all.py`      | `outputs/e1/e13_e15_bootstrap.csv`          |
-| **RQ1**: Paired Tests               | Section 5.1           | `src/e1/compute_e1_metrics.py`    | `outputs/e1/paired_predictions.csv`         |
-| **RQ1**: λcwe Sweep (E2)            | Section 5.1, Supp. Table S3 | `src/e2/e2_ablation_mtl.py` | `outputs/e2/lambda_summary.csv`             |
-| **RQ1**: Chronological Shift (E5)   | Section 5.1, Table 2 | `src/e5/compute_e5_diagnostic.py` | `outputs/e5/per_seed_aggregate_metrics.csv` |
-| **RQ2**: Fuzzy vs Semantic (E3)     | Section 5.2, Table 3 | `src/e3/compute_e3_metrics.py`    | `outputs/e3/table_e3_final.csv`             |
-| **RQ3**: Human Evaluation (E4)      | Section 5.3, Table 4 | `src/e4/analyze_e4_ratings.py`    | `outputs/e4/e4_merged_scores.csv`           |
-| **RQ3**: Holm Testing (E4)          | Section 5.3, Supp. Tables S5–S7 | `src/e4/analyze_e4_ratings.py` | `outputs/e4/e4_wilcoxon_tests.csv`   |
-| **Runtime**: Cost & Filtering (E6)  | Section 6.4           | `src/e6/compute_e6_cost.py`       | `outputs/e6/runtime_summary.csv`            |
-
-
+| RQ / Claim                               | Manuscript Reference             | Evaluation Script (Reference)       | Pre-generated Output Table                    |
+| :--------------------------------------- | :------------------------------- | :---------------------------------- | :-------------------------------------------- |
+| **RQ1**: Multi-task vs Single-task | Section 5.1, Table 1             | `src/e1/compute_e1_metrics.py`    | `outputs/e1/primevul_seed_metrics.csv`      |
+| **RQ1**: Negative Control CI       | Section 5.1                      | `src/e1/e1_bootstrap_all.py`      | `outputs/e1/e13_e15_bootstrap.csv`          |
+| **RQ1**: Paired Tests              | Section 5.1                      | `src/e1/compute_e1_metrics.py`    | `outputs/e1/paired_predictions.csv`         |
+| **RQ1**: λcwe Sweep (E2)          | Section 5.1, Supp. Table S3      | `src/e2/e2_ablation_mtl.py`       | `outputs/e2/lambda_summary.csv`             |
+| **RQ1**: Chronological Shift (E5)  | Section 5.1, Table 2             | `src/e5/compute_e5_diagnostic.py` | `outputs/e5/per_seed_aggregate_metrics.csv` |
+| **RQ2**: Fuzzy vs Semantic (E3)    | Section 5.2, Table 3             | `src/e3/compute_e3_metrics.py`    | `outputs/e3/table_e3_final.csv`             |
+| **RQ3**: Human Evaluation (E4)     | Section 5.3, Table 4             | `src/e4/analyze_e4_ratings.py`    | `outputs/e4/e4_merged_scores.csv`           |
+| **RQ3**: Holm Testing (E4)         | Section 5.3, Supp. Tables S5–S7 | `src/e4/analyze_e4_ratings.py`    | `outputs/e4/e4_wilcoxon_tests.csv`          |
+| **Runtime**: Cost & Filtering (E6) | Section 6.4                      | `src/e6/compute_e6_cost.py`       | `outputs/e6/runtime_summary.csv`            |
 
 ## About the Datasets
 
 Our evaluation builds upon three well-known vulnerability datasets: **PrimeVul**, **BigVul**, and **LineVul**.
 
-* **Stage 1 (Detection)** uses a merged and leakage-controlled Big-Vul/PrimeVul corpus (70/15/15 split). 
+* **Stage 1 (Detection)** uses a merged and leakage-controlled Big-Vul/PrimeVul corpus (70/15/15 split).
 * **Stage 2 (Localization)** & **Stage 3 (Explanation)** utilize a quota-stratified sample of vulnerable LineVul functions balanced across CWE families.
 
-> **Note on Data Availability:** The raw datasets are exceptionally large and require complex deduplication. **The fully pre-processed dataset used in our experiments will be uploaded to a Zenodo link shortly.**
+> **Note on Data Availability:** The raw datasets are exceptionally large and require complex deduplication. **The fully pre-processed dataset used in our experiments is hosted on Zenodo.**
 >
-> 📥 **[Download Processed Dataset Here](https://doi.org/10.5281/zenodo.22732125)**
-
-
+> 📥 **[Download Processed Dataset Here](https://zenodo.org/records/22732125)**
 
 ## About the Models
 
@@ -101,8 +90,6 @@ The X-LocVul pipeline cascades three specialized models:
 1. **Stage 1 (Detection)**: Initialized from `UniXCoder-base` (and `CodeBERT-base` as a baseline). Trained for multi-task vulnerability and CWE detection on an NVIDIA Tesla T4 with a learning rate of `2e-5` and batch size of 8.
 2. **Stage 2 (Localization)**: Utilizes `CodeT5-base` as a sequence-to-sequence generator for vulnerable statement projection. Trained with a learning rate of `5e-5` for 10 epochs using beam search (beam size 4).
 3. **Stage 3 (Explanation)**: Uses `Qwen2.5-Coder-1.5B-Instruct` as a lightweight explainer. We employ a temperature of `0.7` and a 512-token output budget to generate root-cause analyses and repair suggestions.
-
-
 
 ## How to Replicate
 
@@ -232,15 +219,11 @@ make e4                # → outputs/e4/E4_IRR_Metrics.csv, E4_Wilcoxon_Tests.cs
 
 Once finished, the tables in the `outputs/` directory will be overwritten with your newly reproduced data.
 
-
-
 ## Data Provenance and Licenses
 
 * **Source Code**: Released under the MIT License.
 * **Metadata, Tables, and Annotations**: CC BY 4.0.
 * **Datasets**: PrimeVul, BigVul, and LineVul retain their original licenses.
-
-
 
 ## Known Limitations and Reproducibility Boundaries
 
@@ -248,8 +231,6 @@ As stipulated in our artifact design and Section 6.3 (Threats to Validity) of th
 
 * **E1**: Model weights (`.pt`) and cached prediction logs (`.npz`) are not provided due to storage constraints. Consequently, running evaluation without prior training will fail. We rely on the pre-generated tables in `outputs/` for immediate inspection.
 * **E5**: The retained files contain seed-level aggregate metrics rather than sample-level probabilities due to storage limits. Consequently, the artifact reproduces the reported threshold-transfer diagnostic but cannot support post-hoc threshold recalibration.
-
-
 
 ## Appendix: Experimental Results
 
@@ -287,9 +268,9 @@ Below are the key results reported in the manuscript, directly reproducible via 
 
 Scores are rater-averaged means; unsupported claim is a binary rate.
 
-| Condition              | Root Cause | Evidence | CWE  | Repair | Unsupported Claim |
-| :--------------------- | :--------- | :------- | :--- | :----- | :---------------- |
-| Function only          | 1.40       | 2.27     | 1.40 | 1.33   | 0.90              |
-| Function + line        | 1.34       | 3.42     | 1.72 | 1.33   | 0.90              |
-| Function + line + CWE  | 1.40       | 3.51     | 1.40 | 1.27   | 0.86              |
-| Oracle evidence        | 1.86       | 4.43     | 3.70 | 1.59   | 0.87              |
+| Condition             | Root Cause | Evidence | CWE  | Repair | Unsupported Claim |
+| :-------------------- | :--------- | :------- | :--- | :----- | :---------------- |
+| Function only         | 1.40       | 2.27     | 1.40 | 1.33   | 0.90              |
+| Function + line       | 1.34       | 3.42     | 1.72 | 1.33   | 0.90              |
+| Function + line + CWE | 1.40       | 3.51     | 1.40 | 1.27   | 0.86              |
+| Oracle evidence       | 1.86       | 4.43     | 3.70 | 1.59   | 0.87              |

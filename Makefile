@@ -24,7 +24,6 @@ e1:
 	python src/e1/compute_e1_metrics.py
 
 e1-bootstrap:
-	python src/e1/bootstrap_e1.py
 	python src/e1/e1_bootstrap_all.py
 
 e2:

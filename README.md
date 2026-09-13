@@ -27,10 +27,10 @@ This repository contains the replication package for the **X-LocVul** paper. X-L
     <li><a href="#mapping-to-manuscript-experiments">Mapping to Manuscript Experiments</a></li>
     <li><a href="#about-the-datasets">About the Datasets</a></li>
     <li><a href="#about-the-models">About the Models</a></li>
-    <li><a href="#how-to-replicate-step-by-step-guide">How to Replicate (Step-by-Step Guide)</a>
+    <li><a href="#how-to-replicate-step-by-step-guide">How to Replicate</a>
       <ul>
         <li><a href="#0-prerequisites-and-environment-setup">0. Prerequisites and Environment Setup</a></li>
-        <li><a href="#1-direct-inspection-of-results-fastest---no-execution-required">1. Direct Inspection of Results (Fastest)</a></li>
+        <li><a href="#1-direct-inspection-of-results-fastest---no-execution-required">1. Direct Inspection of Results</a></li>
         <li><a href="#2-computational-reproduction-training--evaluation">2. Computational Reproduction (Training & Evaluation)</a></li>
       </ul>
     </li>
@@ -40,13 +40,15 @@ This repository contains the replication package for the **X-LocVul** paper. X-L
   </ol>
 </details>
 
+
+
 ## Directory Structure
 
 To comply with GitHub storage constraints, large data and model weights are ignored via `.gitignore`. The core repository structure is:
 
 ```text
 x-locvul/
-├── README.md             
+├── README.md           
 ├── Makefile                  # Automated commands for reproduction
 ├── environment/              # Environment requirements
 ├── src/                      # Source code (Python scripts)
@@ -58,6 +60,8 @@ x-locvul/
 ├── results/                  # Retained raw logs and intermediate data
 └── outputs/                  # Final generated CSV tables for the manuscript
 ```
+
+
 
 ## Mapping to Manuscript Experiments
 
@@ -74,6 +78,8 @@ Reviewers can trace conclusions from the paper directly to the exact data within
 | **Diagnostic**: Chronological Shift | Section 5.1 & Table 2 | `src/e5/compute_e5_diagnostic.py` | `outputs/e5/per_seed_aggregate_metrics.csv` |
 | **Runtime**: Cost & Filtering       | Section 6.4           | `src/e6/compute_e6_cost.py`       | `outputs/e6/runtime_summary.csv`            |
 
+
+
 ## About the Datasets
 
 Our evaluation builds upon three well-known vulnerability datasets: **PrimeVul**, **BigVul**, and **LineVul**.
@@ -85,6 +91,8 @@ Our evaluation builds upon three well-known vulnerability datasets: **PrimeVul**
 >
 > 📥 **[Download Processed Dataset Here](PASTE_YOUR_GOOGLE_DRIVE_LINK_HERE)**
 
+
+
 ## About the Models
 
 The X-LocVul pipeline cascades three specialized models:
@@ -93,7 +101,9 @@ The X-LocVul pipeline cascades three specialized models:
 2. **Stage 2 (Localization)**: Utilizes `CodeT5-base` as a sequence-to-sequence generator for vulnerable statement projection. Trained with a learning rate of `5e-5` for 10 epochs using beam search (beam size 4).
 3. **Stage 3 (Explanation)**: Uses `Qwen2.5-Coder-1.5B-Instruct` as a lightweight explainer. We employ a temperature of `0.7` and a 512-token output budget to generate root-cause analyses and repair suggestions.
 
-## How to Replicate 
+
+
+## How to Replicate
 
 Because we do not provide pre-trained weights or cached prediction logs in this repository (due to size constraints), **evaluation scripts cannot be run in isolation**. You must either inspect the pre-generated results directly (Method 1) or run the full training pipeline before evaluating (Method 2).
 
@@ -118,7 +128,7 @@ source .venv/bin/activate
 pip install -r environment/requirements.txt
 ```
 
-### 1. Direct Inspection of Results 
+### 1. Direct Inspection of Results
 
 Because full reproduction requires days of GPU training, the fastest way to verify our claims is to inspect the pre-generated CSV tables located in the `outputs/` directory. We provide exhaustive tabular data covering all experimental stages:
 
@@ -197,11 +207,15 @@ make run-pipeline # Runs the end-to-end multi-stage pipeline
 
 Once finished, the tables in the `outputs/` directory will be overwritten with your newly reproduced data.
 
+
+
 ## Data Provenance and Licenses
 
 * **Source Code**: Released under the MIT License.
 * **Metadata, Tables, and Annotations**: CC BY 4.0.
 * **Datasets**: PrimeVul, BigVul, and LineVul retain their original licenses.
+
+
 
 ## Known Limitations and Reproducibility Boundaries
 
@@ -209,6 +223,8 @@ As stipulated in our artifact design and Section 6.3 (Threats to Validity) of th
 
 * **E1**: Model weights (`.pt`) and cached prediction logs (`.npz`) are not provided due to storage constraints. Consequently, running evaluation without prior training will fail. We rely on the pre-generated tables in `outputs/` for immediate inspection.
 * **E5**: The retained files contain seed-level aggregate metrics rather than sample-level probabilities due to storage limits. Consequently, the artifact reproduces the reported threshold-transfer diagnostic but cannot support post-hoc threshold recalibration.
+
+
 
 ## Appendix: Experimental Results
 
@@ -247,16 +263,5 @@ Below are the key results reported in the manuscript, directly reproducible via 
 | Normalized exact match | 41.60 | 41.73 | 41.73 | 41.66 |
 | Fuzzy projection | 83.79 | 85.80 | 85.83 | 84.65 |
 | Semantic projection | 82.21 | 84.90 | 84.93 | 83.31 |
-
-<br>
-
-<h3><b>Table 4: Two-rater E4 results over 50 paired cases.</b></h3>
-
-| Condition | Root cause | Evidence | CWE | Repair | Unsupported claim |
-|:---|:---|:---|:---|:---|:---|
-| Function only | 1.40 | 2.27 | 1.40 | 1.33 | 0.90 |
-| Function + line | 1.34 | 3.42 | 1.72 | 1.33 | 0.90 |
-| Function + line + CWE | 1.40 | 3.51 | 1.40 | 1.27 | 0.86 |
-| Oracle evidence | 1.86 | 4.43 | 3.70 | 1.59 | 0.87 |
 
 </div>

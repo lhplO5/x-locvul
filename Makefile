@@ -34,10 +34,16 @@ e3:
 	python src/e3/compute_e3_average.py
 	python src/e3/e3_localization_ablation.py
 
-e4:
+e4-sample:
 	python src/e4/e4_sample_linevul.py
-	python src/e4/e4_sample_cases.py
+
+run-pipeline-e4:
+	python src/e4/run_full_pipeline.py
+
+e4-prep-human:
 	python src/e4/e4_human_eval.py
+
+e4:
 	python src/e4/analyze_e4_ratings.py
 
 e5:
@@ -45,6 +51,3 @@ e5:
 
 e6:
 	python src/e6/compute_e6_cost.py
-
-run-pipeline:
-	python src/e4/run_full_pipeline.py

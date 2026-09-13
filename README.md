@@ -1,6 +1,6 @@
-# <a href="https://github.com/Anon-Author/X-LocVul">X-LocVul</a> Replication Package
+# <a href="https://github.com/lhplO5/x-locvul">X-LocVul</a> Replication Package
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.xxxxxxx.svg)](https://doi.org/10.5281/zenodo.xxxxxxx)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22732125.svg)](https://doi.org/10.5281/zenodo.xxxxxxx)
 
 <br />
 <p align="center">
@@ -48,7 +48,7 @@ To comply with GitHub storage constraints, large data and model weights are igno
 
 ```text
 x-locvul/
-├── README.md           
+├── README.md         
 ├── Makefile                  # Automated commands for reproduction
 ├── environment/              # Environment requirements
 ├── src/                      # Source code (Python scripts)
@@ -67,16 +67,17 @@ x-locvul/
 
 Reviewers can trace conclusions from the paper directly to the exact data within minutes.
 
-| RQ / Claim                                | Manuscript Section    | Evaluation Script (Reference)       | Pre-generated Output Table                    |
+| RQ / Claim                                | Manuscript Reference  | Evaluation Script (Reference)       | Pre-generated Output Table                    |
 | :---------------------------------------- | :-------------------- | :---------------------------------- | :-------------------------------------------- |
-| **RQ1**: Multi-task vs Single-task  | Section 5.1 & Table 1 | `src/e1/compute_e1_metrics.py`    | `outputs/e1/primevul_seed_metrics.csv`      |
+| **RQ1**: Multi-task vs Single-task  | Section 5.1, Table 1 | `src/e1/compute_e1_metrics.py`    | `outputs/e1/primevul_seed_metrics.csv`      |
 | **RQ1**: Negative Control CI        | Section 5.1           | `src/e1/e1_bootstrap_all.py`      | `outputs/e1/e13_e15_bootstrap.csv`          |
 | **RQ1**: Paired Tests               | Section 5.1           | `src/e1/compute_e1_metrics.py`    | `outputs/e1/paired_predictions.csv`         |
-| **RQ2**: Fuzzy vs Semantic          | Section 5.2 & Table 3 | `src/e3/compute_e3_metrics.py`    | `outputs/e3/table_e3_final.csv`             |
-| **RQ3**: Human Evaluation           | Section 5.3 & Table 4 | `src/e4/analyze_e4_ratings.py`    | `outputs/e4/e4_merged_scores.csv`           |
-| **RQ3**: Holm Testing               | Section 5.3           | `src/e4/analyze_e4_ratings.py`    | `outputs/e4/e4_wilcoxon_tests.csv`          |
-| **Diagnostic**: Chronological Shift | Section 5.1 & Table 2 | `src/e5/compute_e5_diagnostic.py` | `outputs/e5/per_seed_aggregate_metrics.csv` |
-| **Runtime**: Cost & Filtering       | Section 6.4           | `src/e6/compute_e6_cost.py`       | `outputs/e6/runtime_summary.csv`            |
+| **RQ1**: λcwe Sweep (E2)            | Section 5.1, Supp. Table S3 | `src/e2/e2_ablation_mtl.py` | `outputs/e2/lambda_summary.csv`             |
+| **RQ1**: Chronological Shift (E5)   | Section 5.1, Table 2 | `src/e5/compute_e5_diagnostic.py` | `outputs/e5/per_seed_aggregate_metrics.csv` |
+| **RQ2**: Fuzzy vs Semantic (E3)     | Section 5.2, Table 3 | `src/e3/compute_e3_metrics.py`    | `outputs/e3/table_e3_final.csv`             |
+| **RQ3**: Human Evaluation (E4)      | Section 5.3, Table 4 | `src/e4/analyze_e4_ratings.py`    | `outputs/e4/e4_merged_scores.csv`           |
+| **RQ3**: Holm Testing (E4)          | Section 5.3, Supp. Tables S5–S7 | `src/e4/analyze_e4_ratings.py` | `outputs/e4/e4_wilcoxon_tests.csv`   |
+| **Runtime**: Cost & Filtering (E6)  | Section 6.4           | `src/e6/compute_e6_cost.py`       | `outputs/e6/runtime_summary.csv`            |
 
 
 
@@ -84,12 +85,12 @@ Reviewers can trace conclusions from the paper directly to the exact data within
 
 Our evaluation builds upon three well-known vulnerability datasets: **PrimeVul**, **BigVul**, and **LineVul**.
 
-* **Stage 1 (Detection)** uses a merged and leakage-controlled Big-Vul/PrimeVul corpus (70/15/15 split). The test set contains 26,738 functions (24,816 clean and 1,922 vulnerable).
+* **Stage 1 (Detection)** uses a merged and leakage-controlled Big-Vul/PrimeVul corpus (70/15/15 split). 
 * **Stage 2 (Localization)** & **Stage 3 (Explanation)** utilize a quota-stratified sample of vulnerable LineVul functions balanced across CWE families.
 
-> **Note on Data Availability:** The raw datasets are exceptionally large and require complex deduplication. **The fully pre-processed dataset used in our experiments will be uploaded to a Google Drive link shortly.**
+> **Note on Data Availability:** The raw datasets are exceptionally large and require complex deduplication. **The fully pre-processed dataset used in our experiments will be uploaded to a Zenodo link shortly.**
 >
-> 📥 **[Download Processed Dataset Here](PASTE_YOUR_GOOGLE_DRIVE_LINK_HERE)**
+> 📥 **[Download Processed Dataset Here](https://doi.org/10.5281/zenodo.22732125)**
 
 
 
@@ -189,20 +190,44 @@ make train-e5    # Trains chronological diagnostic models
 
 > [!WARNING]
 > **Update Hardcoded Model Paths Before Evaluation**
-> The Python evaluation scripts (e.g., `src/e4/run_full_pipeline.py`) contain hardcoded variables pointing to specific local checkpoint weights (such as `STAGE1_WEIGHTS = "./saved_models_e1_4/..."`).
+> The Python evaluation scripts (e.g., `src/e1/evaluate_e1.py`, `src/e4/run_full_pipeline.py`) contain hardcoded variables pointing to specific local checkpoint weights (such as `STAGE1_WEIGHTS = "./saved_models_e1_4/..."`).
 > Because training models from scratch in Step 2 generates new weights in new timestamped/seed directories under `saved_models/`, **you MUST open the evaluation scripts and manually update these path variables** to point to your newly trained `.pt` files. If you skip this step, the scripts will fail to find the models or crash.
 
-**Only after the corresponding training steps have finished and paths are updated**, run the individual evaluation targets to generate the CSV tables:
+**Only after the corresponding training steps have finished and paths are updated**, run the evaluation targets in the following order:
+
+**Stage 1–3 & 5–6 Evaluation (no human intervention needed):**
 
 ```bash
-make e1          # Evaluates Stage 1 detection performance
-make e1-bootstrap # Computes confidence intervals for E1
-make e2          # Analyzes E2 auxiliary-loss MTL sweep
-make e3          # Computes Top-K, MRR and ablations for localization
-make e4          # Samples cases, evaluates, and analyzes E4 ratings
-make e5          # Calculates chronological threshold diagnostic
-make e6          # Summarizes runtime metrics
-make run-pipeline # Runs the end-to-end multi-stage pipeline
+make e1            # Runs inference + computes detection metrics → outputs/e1/
+make e1-bootstrap  # Computes bootstrap confidence intervals for E1.3 vs E1.5
+make e2            # Analyzes auxiliary-loss MTL sweep → outputs/e2/
+make e3            # Computes Top-K, MRR, and projection ablations → outputs/e3/
+make e5            # Calculates chronological threshold diagnostic → outputs/e5/
+make e6            # Summarizes runtime and cost metrics → outputs/e6/
+```
+
+**Stage 4 (E4) Evaluation — requires a multi-step human-in-the-loop process:**
+
+The E4 experiment involves human evaluation of LLM-generated explanations. It must be executed in four sequential steps:
+
+```bash
+# Step 4a: Sample 150 vulnerable functions from LineVul test set
+make e4-sample         # → data/processed/e4_sample_150_linevul.jsonl
+
+# Step 4b: Run the full 3-stage pipeline (Detection → Localization → Explanation)
+#          Requires GPU and trained model weights.
+make run-pipeline-e4   # → results/e4/full_pipeline_results.jsonl
+
+# Step 4c: Generate blinded rating sheets for two human raters
+make e4-prep-human     # → results/e4/E4_RaterA.csv, E4_RaterB.csv, master_key.csv
+
+# ⚠️  PAUSE HERE: Two independent raters must manually score the generated
+#     rating sheets. Save the completed ratings to:
+#       outputs/e4/e4_rater_A.csv
+#       outputs/e4/e4_rater_B.csv
+
+# Step 4d: Analyze the human ratings (IRR, means, Wilcoxon tests)
+make e4                # → outputs/e4/E4_IRR_Metrics.csv, E4_Wilcoxon_Tests.csv, etc.
 ```
 
 Once finished, the tables in the `outputs/` directory will be overwritten with your newly reproduced data.
@@ -232,28 +257,28 @@ Below are the key results reported in the manuscript, directly reproducible via 
 
 ### **Table 1: Controlled RQ1 comparison on the leakage-controlled PrimeVul-derived test set.**
 
-| Run | Configuration | Accuracy (%) | MCC (%) | Vul. F1 (%) | PR-AUC (%) | FPR (%) |
-|:---|:---|:---|:---|:---|:---|:---|
-| E1.0a | Majority-clean | 98.13 | 0.00 | 0.00 | 0.00 | 0.00 |
-| E1.0b | Lexical-logistic | 82.49 | 12.87 | 10.15 | 8.93 | 16.96 |
-| E1.1 | CodeBERT, single-task BCE | 98.13 ± 0.01 | 7.05 ± 6.64 | 4.10 ± 4.29 | 8.48 ± 4.12 | 0.06 ± 0.06 |
-| E1.2 | UniXCoder, single-task BCE (λcwe = 0) | 98.12 ± 0.03 | 11.53 ± 6.14 | 7.33 ± 4.77 | 13.36 ± 0.27 | 0.11 ± 0.09 |
-| E1.3 | UniXCoder, multi-task, true CWE labels | 98.13 ± 0.01 | 14.45 [8.96, 19.57] | 7.73 [4.49, 11.21] | 14.64 [11.57, 18.14] | 0.11 ± 0.06 |
-| E1.4 | UniXCoder, multi-task + hard-example mining | 97.10 ± 0.96 | 12.92 ± 2.99 | 13.37 ± 3.23 | 10.25 ± 0.66 | 1.31 ± 1.12 |
-| E1.5 | UniXCoder, multi-task, shuffled CWE (negative control) | 98.14 ± 0.01 | 15.35 [9.79, 20.91] | 8.20 [4.71, 11.91] | 14.67 [11.60, 18.28] | 0.09 ± 0.02 |
-| E1.6 | UniXCoder, multi-task, hierarchical (parent) CWE | 98.15 ± 0.00 | 7.45 ± 6.53 | 3.84 ± 3.75 | 11.04 ± 3.95 | 0.04 ± 0.04 |
+| Run   | Configuration                                          | Accuracy (%)  | MCC (%)             | Vul. F1 (%)        | PR-AUC (%)           | FPR (%)      |
+| :---- | :----------------------------------------------------- | :------------ | :------------------ | :----------------- | :------------------- | :----------- |
+| E1.0a | Majority-clean                                         | 98.13         | 0.00                | 0.00               | 0.00                 | 0.00         |
+| E1.0b | Lexical-logistic                                       | 82.49         | 12.87               | 10.15              | 8.93                 | 16.96        |
+| E1.1  | CodeBERT, single-task BCE                              | 98.13 ± 0.01 | 7.05 ± 6.64        | 4.10 ± 4.29       | 8.48 ± 4.12         | 0.06 ± 0.06 |
+| E1.2  | UniXCoder, single-task BCE (λcwe = 0)                 | 98.12 ± 0.03 | 11.53 ± 6.14       | 7.33 ± 4.77       | 13.36 ± 0.27        | 0.11 ± 0.09 |
+| E1.3  | UniXCoder, multi-task, true CWE labels                 | 98.13 ± 0.01 | 14.45 [8.96, 19.57] | 7.73 [4.49, 11.21] | 14.64 [11.57, 18.14] | 0.11 ± 0.06 |
+| E1.4  | UniXCoder, multi-task + hard-example mining            | 97.10 ± 0.96 | 12.92 ± 2.99       | 13.37 ± 3.23      | 10.25 ± 0.66        | 1.31 ± 1.12 |
+| E1.5  | UniXCoder, multi-task, shuffled CWE (negative control) | 98.14 ± 0.01 | 15.35 [9.79, 20.91] | 8.20 [4.71, 11.91] | 14.67 [11.60, 18.28] | 0.09 ± 0.02 |
+| E1.6  | UniXCoder, multi-task, hierarchical (parent) CWE       | 98.15 ± 0.00 | 7.45 ± 6.53        | 3.84 ± 3.75       | 11.04 ± 3.95        | 0.04 ± 0.04 |
 
 ### **Table 2: Chronological/de-duplicated evaluation at the fixed validation threshold.**
 
 | Accuracy (%) | MCC (%) | Precision (%) | Recall (%) | F1 (%) | PR-AUC (%) | ROC-AUC (%) |
-|:---|:---|:---|:---|:---|:---|:---|
-| 96.55 | -0.18 | 0.00 | 0.00 | 0.00 | 10.97 | 78.21 |
+| :----------- | :------ | :------------ | :--------- | :----- | :--------- | :---------- |
+| 96.55        | -0.18   | 0.00          | 0.00       | 0.00   | 10.97      | 78.21       |
 
 ### **Table 3: Competing source-projection mechanisms in E3.**
 
-| Strategy | Top-1 (%) | Top-5 (%) | Top-10 (%) | MRR (%) |
-|:---|:---|:---|:---|:---|
-| Raw generation | 83.06 | 83.31 | 83.51 | 83.18 |
-| Normalized exact match | 41.60 | 41.73 | 41.73 | 41.66 |
-| Fuzzy projection | 83.79 | 85.80 | 85.83 | 84.65 |
-| Semantic projection | 82.21 | 84.90 | 84.93 | 83.31 |
+| Strategy               | Top-1 (%) | Top-5 (%) | Top-10 (%) | MRR (%) |
+| :--------------------- | :-------- | :-------- | :--------- | :------ |
+| Raw generation         | 83.06     | 83.31     | 83.51      | 83.18   |
+| Normalized exact match | 41.60     | 41.73     | 41.73      | 41.66   |
+| Fuzzy projection       | 83.79     | 85.80     | 85.83      | 84.65   |
+| Semantic projection    | 82.21     | 84.90     | 84.93      | 83.31   |

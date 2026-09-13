@@ -35,7 +35,7 @@ def compute_irr(dfA, dfB):
                     'Cohen_Kappa': kappa
                 })
                 
-    pd.DataFrame(irr_results).to_csv("./outputs/e4/E4_IRR_Metrics.csv", index=False)
+    pd.DataFrame(irr_results).to_csv("./outputs/e4/e4_irr_metrics.csv", index=False)
 
 def compute_means(merged_df):
     print("\nMean Scores per Condition")
@@ -48,8 +48,8 @@ def compute_means(merged_df):
     avg_cols = [f"{m}_avg" for m in metrics]
     means_by_cond = merged_df.groupby('Condition')[avg_cols].mean()
     print(means_by_cond.round(3))
-    means_by_cond.round(3).to_csv("./outputs/e4/E4_Condition_Means.csv")
-    merged_df.to_csv("./outputs/e4/E4_Merged_Average_Scores.csv", index=False)
+    means_by_cond.round(3).to_csv("./outputs/e4/e4_condition_mean.csv")
+    merged_df.to_csv("./outputs/e4/e4_merged_scores.csv", index=False)
     return merged_df
 
 def paired_test(df, cond1, cond2, metrics, results_list):
@@ -132,7 +132,7 @@ def main():
     print("\n3. Predicted evidence (A3) vs Oracle evidence (A4)")
     paired_test(merged_df, 'A3_FunctionLineCWE', 'A4_Oracle', metrics_to_test, wilcoxon_results)
 
-    pd.DataFrame(wilcoxon_results).to_csv("./outputs/e4/E4_Wilcoxon_Tests.csv", index=False)
+    pd.DataFrame(wilcoxon_results).to_csv("./outputs/e4/e4_wilcoxon_tests.csv", index=False)
 
 
 if __name__ == "__main__":

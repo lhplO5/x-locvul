@@ -20,6 +20,7 @@ train-e5:
 	python src/e5/e5_train_detector.py
 
 e1:
+	python src/e1/evaluate_e1.py
 	python src/e1/compute_e1_metrics.py
 
 e1-bootstrap:

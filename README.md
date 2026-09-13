@@ -230,9 +230,7 @@ As stipulated in our artifact design and Section 6.3 (Threats to Validity) of th
 
 Below are the key results reported in the manuscript, directly reproducible via the pre-generated data tables in this repository
 
-<div align="center">
-
-<h3><b>Table 1: Controlled RQ1 comparison on the leakage-controlled PrimeVul-derived test set.</b></h3>
+### **Table 1: Controlled RQ1 comparison on the leakage-controlled PrimeVul-derived test set.**
 
 | Run | Configuration | Accuracy (%) | MCC (%) | Vul. F1 (%) | PR-AUC (%) | FPR (%) |
 |:---|:---|:---|:---|:---|:---|:---|
@@ -245,17 +243,13 @@ Below are the key results reported in the manuscript, directly reproducible via 
 | E1.5 | UniXCoder, multi-task, shuffled CWE (negative control) | 98.14 ± 0.01 | 15.35 [9.79, 20.91] | 8.20 [4.71, 11.91] | 14.67 [11.60, 18.28] | 0.09 ± 0.02 |
 | E1.6 | UniXCoder, multi-task, hierarchical (parent) CWE | 98.15 ± 0.00 | 7.45 ± 6.53 | 3.84 ± 3.75 | 11.04 ± 3.95 | 0.04 ± 0.04 |
 
-<br>
-
-<h3><b>Table 2: Chronological/de-duplicated evaluation at the fixed validation threshold.</b></h3>
+### **Table 2: Chronological/de-duplicated evaluation at the fixed validation threshold.**
 
 | Accuracy (%) | MCC (%) | Precision (%) | Recall (%) | F1 (%) | PR-AUC (%) | ROC-AUC (%) |
 |:---|:---|:---|:---|:---|:---|:---|
 | 96.55 | -0.18 | 0.00 | 0.00 | 0.00 | 10.97 | 78.21 |
 
-<br>
-
-<h3><b>Table 3: Competing source-projection mechanisms in E3.</b></h3>
+### **Table 3: Competing source-projection mechanisms in E3.**
 
 | Strategy | Top-1 (%) | Top-5 (%) | Top-10 (%) | MRR (%) |
 |:---|:---|:---|:---|:---|
@@ -263,5 +257,3 @@ Below are the key results reported in the manuscript, directly reproducible via 
 | Normalized exact match | 41.60 | 41.73 | 41.73 | 41.66 |
 | Fuzzy projection | 83.79 | 85.80 | 85.83 | 84.65 |
 | Semantic projection | 82.21 | 84.90 | 84.93 | 83.31 |
-
-</div>

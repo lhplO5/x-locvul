@@ -1,0 +1,11 @@
+datasets
+evaluate
+huggingface_hub
+numpy
+pandas
+scikit-learn
+scipy
+statsmodels
+torch
+tqdm
+transformers

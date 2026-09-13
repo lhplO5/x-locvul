@@ -1,6 +1,6 @@
 # <a href="https://github.com/lhplO5/x-locvul">X-LocVul</a> Replication Package
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22732125.svg)](https://zenodo.org/records/22732125)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.22732125-blue)](https://zenodo.org/records/22732125)
 
 <br />
 <p align="center">

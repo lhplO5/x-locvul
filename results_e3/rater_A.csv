@@ -1,5 +1,0 @@
-Review_ID,Vulnerability_Type,Source_Evidence,Root_Cause,Repair,Auto_CWE_Consistent,Score_RootCause_1_5,Score_Evidence_1_5,Score_Repair_1_5,Rater_Notes
-REV_0000,CWE-119,line,bad,good,True,,,,
-REV_0001,Buffer Overflow,line,bad,good,True,,,,
-REV_0002,CWE-119,line,bad,good,True,,,,
-REV_0003,Buffer Overflow,line,bad,good,True,,,,

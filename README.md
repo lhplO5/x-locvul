@@ -44,9 +44,9 @@ This repository contains the replication package for the **X-LocVul** paper. X-L
 
 ```text
 x-locvul/
-├── README.md     
+├── README.md   
 ├── Makefile                  # Automated commands for reproduction
-├── environment/              # Environment requirements
+├── environment.txt           # Environment requirements
 ├── src/                      # Source code (Python scripts)
 │   ├── e1/                   # Stage 1: Detection scripts
 │   ├── e2/                   # Stage 1: Loss weight ablation scripts
@@ -89,7 +89,7 @@ The X-LocVul pipeline cascades three specialized models:
 
 1. **Stage 1 (Detection)**: Initialized from `UniXCoder-base` (and `CodeBERT-base` as a baseline). Trained for multi-task vulnerability and CWE detection on an NVIDIA RTX 5090.
 2. **Stage 2 (Localization)**: Utilizes `CodeT5-base` as a sequence-to-sequence generator for vulnerable statement projection.
-3. **Stage 3 (Explanation)**: Uses `Qwen2.5-Coder-1.5B-Instruct` as a lightweight explainer. 
+3. **Stage 3 (Explanation)**: Uses `Qwen2.5-Coder-1.5B-Instruct` as a lightweight explainer.
 
 ## How to Replicate
 
@@ -113,7 +113,7 @@ cd X-LocVul
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r environment/requirements.txt
+pip install -r requirements.txt
 ```
 
 ### 1. Direct Inspection of Results
@@ -199,7 +199,7 @@ The E4 experiment involves human evaluation of LLM-generated explanations. It mu
 
 ```bash
 # Step 4a: Sample 150 vulnerable functions from LineVul test set
-make e4-sample    
+make e4-sample  
 # Step 4b: Run the full 3-stage pipeline (Detection → Localization → Explanation)
 make run-pipeline-e4 
 # Step 4c: Generate blinded rating sheets for two human raters

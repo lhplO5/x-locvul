@@ -330,7 +330,7 @@ for cfg in CONFIGS:
 
 
 print("\n5. Saving CSV Reports...")
-os.makedirs("results", exist_ok=True)
+os.makedirs("outputs/e1", exist_ok=True)
 
 # Define column orders specifically requested
 col_order = ["Run", "Encoder/loss/sampling", "Mục đích", "PR-AUC", "F1-score", "MCC", "Precision", "Recall", "Accuracy", "FPR", "ROC-AUC", "Calibration ECE", "Brier score"]
@@ -339,19 +339,19 @@ t3_order = ["Run", "Encoder/loss/sampling", "Mục đích", "Paired Accuracy", "
 if table1_rows:
     df1 = pd.DataFrame(table1_rows)
     df1 = df1[[c for c in col_order if c in df1.columns]]
-    df1.to_csv("results/table1_primevul.csv", index=False)
-    print("Saved results/table1_primevul.csv")
+    df1.to_csv("outputs/e1/primevul_seed_metrics.csv", index=False)
+    print("Saved outputs/e1/primevul_seed_metrics.csv")
 
 if table2_rows:
     df2 = pd.DataFrame(table2_rows)
     df2 = df2[[c for c in col_order if c in df2.columns]]
-    df2.to_csv("results/table2_bigvul.csv", index=False)
-    print("Saved results/table2_bigvul.csv")
+    df2.to_csv("outputs/e1/bigvul_seed_metrics.csv", index=False)
+    print("Saved outputs/e1/bigvul_seed_metrics.csv")
 
 if table3_rows:
     df3 = pd.DataFrame(table3_rows)
     df3 = df3[[c for c in t3_order if c in df3.columns]]
-    df3.to_csv("results/table3_paired.csv", index=False)
-    print("Saved results/table3_paired.csv")
+    df3.to_csv("outputs/e1/paired_predictions.csv", index=False)
+    print("Saved outputs/e1/paired_predictions.csv")
 
 print("[OK] Evaluation completed successfully!")

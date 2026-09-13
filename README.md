@@ -282,3 +282,14 @@ Below are the key results reported in the manuscript, directly reproducible via 
 | Normalized exact match | 41.60     | 41.73     | 41.73      | 41.66   |
 | Fuzzy projection       | 83.79     | 85.80     | 85.83      | 84.65   |
 | Semantic projection    | 82.21     | 84.90     | 84.93      | 83.31   |
+
+### **Table 4: Two-rater E4 results over 50 paired cases.**
+
+Scores are rater-averaged means; unsupported claim is a binary rate.
+
+| Condition              | Root Cause | Evidence | CWE  | Repair | Unsupported Claim |
+| :--------------------- | :--------- | :------- | :--- | :----- | :---------------- |
+| Function only          | 1.40       | 2.27     | 1.40 | 1.33   | 0.90              |
+| Function + line        | 1.34       | 3.42     | 1.72 | 1.33   | 0.90              |
+| Function + line + CWE  | 1.40       | 3.51     | 1.40 | 1.27   | 0.86              |
+| Oracle evidence        | 1.86       | 4.43     | 3.70 | 1.59   | 0.87              |

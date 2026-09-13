@@ -225,9 +225,9 @@ Below are the key results reported in the manuscript, directly reproducible via 
 | E1.1 | CodeBERT, single-task BCE | 98.13 ± 0.01 | 7.05 ± 6.64 | 4.10 ± 4.29 | 8.48 ± 4.12 | 0.06 ± 0.06 |
 | E1.2 | UniXCoder, single-task BCE (λcwe = 0) | 98.12 ± 0.03 | 11.53 ± 6.14 | 7.33 ± 4.77 | 13.36 ± 0.27 | 0.11 ± 0.09 |
 | E1.3 | UniXCoder, multi-task, true CWE labels | 98.13 ± 0.01 | 14.45 [8.96, 19.57] | 7.73 [4.49, 11.21] | 14.64 [11.57, 18.14] | 0.11 ± 0.06 |
+| E1.4 | UniXCoder, multi-task + hard-example mining | 97.10 ± 0.96 | 12.92 ± 2.99 | 13.37 ± 3.23 | 10.25 ± 0.66 | 1.31 ± 1.12 |
 | E1.5 | UniXCoder, multi-task, shuffled CWE (negative control) | 98.14 ± 0.01 | 15.35 [9.79, 20.91] | 8.20 [4.71, 11.91] | 14.67 [11.60, 18.28] | 0.09 ± 0.02 |
 | E1.6 | UniXCoder, multi-task, hierarchical (parent) CWE | 98.15 ± 0.00 | 7.45 ± 6.53 | 3.84 ± 3.75 | 11.04 ± 3.95 | 0.04 ± 0.04 |
-| E1.4 | UniXCoder, multi-task + hard-example mining | 97.10 ± 0.96 | 12.92 ± 2.99 | 13.37 ± 3.23 | 10.25 ± 0.66 | 1.31 ± 1.12 |
 
 <br>
 

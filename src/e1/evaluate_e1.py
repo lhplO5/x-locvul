@@ -12,7 +12,7 @@ from sklearn.metrics import (
 )
 from statsmodels.stats.contingency_tables import mcnemar
 
-print("1. Loading datasets...")
+print("1. Loading datasets")
 FROZEN_DIR = "./data/manifests"
 test_pv_df = pd.read_json(f"{FROZEN_DIR}/test_primevul_frozen.jsonl", lines=True)
 test_bv_df = pd.read_json(f"{FROZEN_DIR}/test_bigvul_frozen.jsonl", lines=True)
@@ -23,7 +23,7 @@ for df in [test_pv_df, test_bv_df, test_pair_df]:
     if 'cwe_encoded' not in df.columns:
         df['cwe_encoded'] = -100
 
-print("2. Setting up Tokenizers...")
+print("2. Setting up Tokenizers")
 cb_tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
 ux_tokenizer = AutoTokenizer.from_pretrained("microsoft/unixcoder-base")
 
@@ -43,7 +43,7 @@ ux_pv = tokenize_df(test_pv_df, ux_tokenizer)
 ux_bv = tokenize_df(test_bv_df, ux_tokenizer)
 ux_pair = tokenize_df(test_pair_df, ux_tokenizer)
 
-print("3. Defining Model Architectures...")
+print("3. Defining Model Architectures")
 
 class CodeBERTSingleTask(nn.Module):
     def __init__(self):
@@ -87,7 +87,6 @@ class UniXCoderMultiTask(nn.Module):
         return {"logits": bin_logits, "cwe_logits": cwe_logits}
 
 
-# Helper for metrics
 def expected_calibration_error(y_true, y_prob, n_bins=10):
     bin_boundaries = np.linspace(0, 1, n_bins + 1)
     bin_lowers = bin_boundaries[:-1]
@@ -148,7 +147,6 @@ def calculate_mcnemar(labels, preds1, preds2):
     result = mcnemar(table, exact=False, correction=True)
     return result.pvalue
 
-# Configurations
 CONFIGS = [
     {
         "run": "E1.1", 
@@ -206,12 +204,10 @@ CONFIGS = [
     }
 ]
 
-# We need a Custom Trainer to extract outputs nicely
 class EvalTrainer(Trainer):
     def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
         labels = inputs.pop("labels")
         outputs = model(**inputs)
-        # Handle both single and multi-task models
         if isinstance(outputs, dict) and "logits" in outputs:
             logits = outputs["logits"]
         else:
@@ -221,7 +217,6 @@ class EvalTrainer(Trainer):
         return (loss, outputs) if return_outputs else loss
 
 
-# To store paired predictions for McNemar
 paired_predictions = {}
 labels_paired = test_pair_df['label'].values
 
@@ -229,7 +224,7 @@ table1_rows = []
 table2_rows = []
 table3_rows = []
 
-print("\n4. Running Evaluations...")
+print("\n4. Running Evaluations")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 args = TrainingArguments(output_dir="./tmp", per_device_eval_batch_size=32, report_to="none")
 
@@ -248,7 +243,6 @@ for cfg in CONFIGS:
     model.to(device)
     model.eval()
     
-    # Select datasets based on tokenizer
     if cfg['tokenizer'] == 'cb':
         ds_pv, ds_bv, ds_pair = cb_pv, cb_bv, cb_pair
     else:
@@ -259,7 +253,6 @@ for cfg in CONFIGS:
     def get_probs(dataset):
         preds = trainer.predict(dataset)
         logits = preds.predictions
-        # Output shape could be tuple if multitask
         if isinstance(logits, tuple):
             bin_logits = logits[0]
         elif isinstance(logits, dict) and "logits" in logits:
@@ -267,28 +260,27 @@ for cfg in CONFIGS:
         else:
             bin_logits = logits
         
-        # Handle array shapes correctly
         if bin_logits.ndim == 2:
             bin_logits = bin_logits[:, 0] if bin_logits.shape[1] == 1 else bin_logits
             
         probs = 1.0 / (1.0 + np.exp(-bin_logits))
         return probs
 
-    print("  -> PrimeVul...")
+    print("  -> PrimeVul")
     probs_pv = get_probs(ds_pv)
     metrics_pv = calculate_metrics(test_pv_df['label'].values, probs_pv)
     row_pv = {"Run": cfg['run'], "Encoder/loss/sampling": cfg['desc'], "Mục đích": cfg['purpose']}
     row_pv.update(metrics_pv)
     table1_rows.append(row_pv)
     
-    print("  -> BigVul...")
+    print("  -> BigVul")
     probs_bv = get_probs(ds_bv)
     metrics_bv = calculate_metrics(test_bv_df['label'].values, probs_bv)
     row_bv = {"Run": cfg['run'], "Encoder/loss/sampling": cfg['desc'], "Mục đích": cfg['purpose']}
     row_bv.update(metrics_bv)
     table2_rows.append(row_bv)
     
-    print("  -> Paired Set...")
+    print("  -> Paired Set")
     probs_pair = get_probs(ds_pair)
     preds_pair = (probs_pair > 0.5).astype(int)
     paired_predictions[cfg['run']] = preds_pair
@@ -304,19 +296,16 @@ for cfg in CONFIGS:
         "McNemar's p-value (vs E1.2)": "N/A"
     }
     
-    # Calculate McNemar vs E1.1
     if 'E1.1' in paired_predictions and cfg['run'] != 'E1.1':
         p1 = calculate_mcnemar(labels_paired, paired_predictions[cfg['run']], paired_predictions['E1.1'])
         row_pair["McNemar's p-value (vs E1.1)"] = f"{p1:.4e}"
         
-    # Calculate McNemar vs E1.2
     if 'E1.2' in paired_predictions and cfg['run'] != 'E1.2':
         p2 = calculate_mcnemar(labels_paired, paired_predictions[cfg['run']], paired_predictions['E1.2'])
         row_pair["McNemar's p-value (vs E1.2)"] = f"{p2:.4e}"
         
     table3_rows.append(row_pair)
     
-    # Save individual results to the model's directory
     model_dir = os.path.dirname(cfg['checkpoint'])
     import json
     eval_dict = {
@@ -329,10 +318,9 @@ for cfg in CONFIGS:
     print(f"  -> Saved individual metrics to {model_dir}/eval_metrics.json")
 
 
-print("\n5. Saving CSV Reports...")
+print("\n5. Saving CSV Reports")
 os.makedirs("outputs/e1", exist_ok=True)
 
-# Define column orders specifically requested
 col_order = ["Run", "Encoder/loss/sampling", "Mục đích", "PR-AUC", "F1-score", "MCC", "Precision", "Recall", "Accuracy", "FPR", "ROC-AUC", "Calibration ECE", "Brier score"]
 t3_order = ["Run", "Encoder/loss/sampling", "Mục đích", "Paired Accuracy", "McNemar's p-value (vs E1.1)", "McNemar's p-value (vs E1.2)"]
 
@@ -354,4 +342,4 @@ if table3_rows:
     df3.to_csv("outputs/e1/paired_predictions.csv", index=False)
     print("Saved outputs/e1/paired_predictions.csv")
 
-print("[OK] Evaluation completed successfully!")
+print("Evaluation completed successfully!")

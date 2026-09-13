@@ -176,7 +176,13 @@ make train-e5    # Trains chronological diagnostic models
 *(Note: Output weights will be saved to the `saved_models/` directory during this process).*
 
 **Step 3: Evaluate and Generate Tables**
-**Only after the corresponding training steps have finished**, run the individual evaluation targets to generate the CSV tables:
+
+> [!WARNING]
+> **Update Hardcoded Model Paths Before Evaluation**
+> The Python evaluation scripts (e.g., `src/e4/run_full_pipeline.py`) contain hardcoded variables pointing to specific local checkpoint weights (such as `STAGE1_WEIGHTS = "./saved_models_e1_4/..."`).
+> Because training models from scratch in Step 2 generates new weights in new timestamped/seed directories under `saved_models/`, **you MUST open the evaluation scripts and manually update these path variables** to point to your newly trained `.pt` files. If you skip this step, the scripts will fail to find the models or crash.
+
+**Only after the corresponding training steps have finished and paths are updated**, run the individual evaluation targets to generate the CSV tables:
 
 ```bash
 make e1          # Evaluates Stage 1 detection performance
